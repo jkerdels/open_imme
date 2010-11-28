@@ -34,30 +34,8 @@ void main(void)
 	ms_wait(1000);
 	imme_red_led(0);
 
-
-
-/*
-	for (row = 10; row < 20; ++row){
-		imme_set_pixel(row,10,3);
-		imme_set_pixel(row,20,3);
-	}
-	for (col = 10; col < 20; ++col){
-		imme_set_pixel(10,col,3);
-		imme_set_pixel(20,col,3);
-	}
-*/
-
 	while (1) {
 
-/*
-		uint8_t key = getChar();
-
-		if (key > 0) {
-			dispBuf[DISP_WIDTH*2+idx+5] = key;
-			dispBuf[DISP_WIDTH*2+DISP_WIDTH+idx+5] = key;			
-			idx = (idx + 1) % 100;
-		}
-*/
 		EA=0;
 		idx = (idx + 5) % 100;
 		EA=1;
@@ -72,7 +50,6 @@ void main(void)
 		}
 		ms_wait(250);
 
-//		memset(dispBuf,0x00,DISP_WIDTH*8);
 
 		for (row = 10; row < 20; ++row){
 			imme_set_pixel(idx + row,10,0);

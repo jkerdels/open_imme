@@ -4,7 +4,7 @@
 #define CAST(new_type,old_object) (*((new_type *)&old_object))
 
 // buffer used for the display with
-// 2 bit per pixel (4 grayscales, yeah!)
+// 2 bit per pixel (4 grayscales)
 __xdata static uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2L];
 
 // double buffer used for audio output
@@ -152,10 +152,6 @@ void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
 	if (TIMIF & 0x01) {
 		TIMIF &= ~0x01; // clear flag
 		DMAREQ |= 0x01; // trigger DMA 0
-		/*
-		if ((callCnt & 15) == 0)
-			DMAREQ = 0x02; // trigger DMA 1
-		*/
 
 		// do some keyboard stuff ... sometimes
 		// @8khz this would be roughly 30hz
@@ -319,8 +315,6 @@ void display_clear(uint8_t pageVal)
 
 void reset_display(void)
 {
-	// wait for DMA to take a break
-	//while (dmaEnabled);
 	// short reset pulse to display
 	P1 &= ~0x02;
 	ms_wait(1);
@@ -345,21 +339,6 @@ void reset_display(void)
     manual_SPI(0xa4);
 
 	manual_SPI(0xa6); // normal mode
-
-/*
-	// this is the sequence from the spectrum analyzer of michael ossmann
-    // original from dave's blog
-	manual_SPI(0xe2); // RESET cmd
-	manual_SPI(0x24); // set internal resistor ratio
-	manual_SPI(0x81); // set Vol Control
-	manual_SPI(0x60); // set Vol Control - ctd
-	manual_SPI(0xe6); // ?? -- don't know what this command is
-	manual_SPI(0x00); // ?? -- don't know what this command is
-	manual_SPI(0x2f); // set internal PSU operating mode
-	manual_SPI(0xa1); // LCD bias set
-	manual_SPI(0xaf); // Display ON
-	manual_SPI(0xa4); // Normal (not all pixels) mode
-*/
 
 }
 
@@ -412,7 +391,6 @@ void imme_init(void)
 	// enable DMA interrupt
     // enable timer 3 interrupt
 	IEN1 |= 0x09;
-//	IEN2 |= 0x04;
 
 	
 	
@@ -524,7 +502,6 @@ void imme_init(void)
 	U0CSR  = 0x00; // set for SPI master
 	U0BAUD = 0x3B; // baud mantissa 
 	U0GCR  = 0x30; // MSB first + 0x10 as baud exponent
-//	U0GCR  = 0x2F;
 
 	// enable chip select 
 	P0 &= ~0x10;
@@ -562,7 +539,7 @@ void imme_init(void)
 	// trigger first manual
 	DMAREQ |= 0x02;
 	
-	testPattern();
+	//testPattern();
 
 	// enable interrupts globally
 	EA = 1;

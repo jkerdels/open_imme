@@ -29,10 +29,6 @@
 #define DISP_HEIGHT   65L
 #define DISP_PAGES     9L
 
-//extern __xdata volatile uint8_t dispBuf[];
-
-
-
 // sampling frequency settings:
 // SRATE_PRE is the prescaler of timer 3, e.g. SRATE_PRE = 2 => 6.5Mhz
 // prescaler values:
@@ -117,7 +113,6 @@ uint8_t getChar(void);
 // y in [0..DISP_HEIGHT-1]
 // color [0..3] -> 0 == white, 3 == black
 void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color);
-
 
 
 
