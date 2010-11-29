@@ -18,48 +18,31 @@
  */
 
 
+#include <stdio.h>
 #include <string.h>
 #include "imme.h"
 
 
 void main(void) 
 {
-	uint8_t   row;
-	uint8_t   col;
-	uint8_t   idx = 0;
 
 	imme_init();
 
 	imme_red_led(1);
 	ms_wait(1000);
 	imme_red_led(0);
+	imme_green_led(0);
+
+	ms_wait(250);		
+
+	printf("|--------------------|");
+	printf("| IM-Me Control 0.1a |");
+	printf("|____________________|");
+
+//	imme_set_pixel(0,8,3);
 
 	while (1) {
-
-		EA=0;
-		idx = (idx + 5) % 100;
-		EA=1;
-
-		for (row = 10; row < 20; ++row){
-			imme_set_pixel(idx + row,10,3);
-			imme_set_pixel(idx + row+1,20,3);
-		}
-		for (col = 10; col < 20; ++col){
-			imme_set_pixel(idx + 10,col+1,3);
-			imme_set_pixel(idx + 20,col,3);
-		}
-		ms_wait(250);
-
-
-		for (row = 10; row < 20; ++row){
-			imme_set_pixel(idx + row,10,0);
-			imme_set_pixel(idx + row+1,20,0);
-		}
-		for (col = 10; col < 20; ++col){
-			imme_set_pixel(idx + 10,col+1,0);
-			imme_set_pixel(idx + 20,col,0);
-		}
-		
+		ms_wait(250);		
 	}
 }
 

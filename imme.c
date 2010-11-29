@@ -1,5 +1,6 @@
 #include <string.h>
 #include "imme.h"
+#include "imme_font.h"
 
 #define CAST(new_type,old_object) (*((new_type *)&old_object))
 
@@ -120,11 +121,13 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 			tmpAddr = (uint16_t)(dispBuf);
 			if (switchCnt)
 				tmpAddr += DISP_WIDTH;
+		} else {
+			tmpAddr += DISP_WIDTH*2L;
 		}
-		tmpAddr += DISP_WIDTH*2;
 		dmaCfg1N[0]  = tmpAddr >> 8;
 		dmaCfg1N[1]  = tmpAddr;
 		manual_SPI(0xa4);
+		set_display_page(curPage);
 		set_display_page(curPage);
 		set_display_col(0);
 		set_display_col(0);
@@ -529,6 +532,7 @@ void imme_init(void)
 	DMAIRQ &= ~0x02;
 
 	set_display_cmd();
+	set_display_start(0);
 	set_display_page(0);
 	set_display_col(0);
 	set_display_data();
@@ -582,10 +586,43 @@ void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color)
 }
 
 
-
-
-
-
+// sdcc provides printf if we provide this 
+void putchar(char c) {
+	const uint8_t  fontWidth = defaultFontWidth;
+	const uint8_t *font      = defaultFont;
+	static uint8_t cursorPage = 0;
+	static uint8_t cursorXPos = 0;
+	uint8_t *dispPos;
+	uint8_t x;
+	EA = 0;
+	dispPos = dispBuf + cursorPage * (DISP_WIDTH*2L) + cursorXPos;
+	if (c == 0x20){ // space
+		cursorXPos += fontWidth + 1;
+	} else if (c == 0x0D) { // CR
+		cursorXPos = 0;
+	} else if (c == 0x0A) { // NL
+		cursorXPos = 0;
+		++cursorPage;
+	} else if ((c > 0x20) && (c < 0x7F)) {
+		// print lsb
+		uint16_t fidx = (c - 0x21) * (fontWidth*2);
+		for (x = 0; x < fontWidth; ++x)
+			dispPos[x] = font[fidx+x];
+		// print msb
+		for (x = 0; x < fontWidth; ++x)
+			dispPos[x+DISP_WIDTH] = font[fidx+x+fontWidth];
+		// increase cursor
+		cursorXPos += fontWidth + 1;
+	}
+	if (cursorXPos > DISP_WIDTH-fontWidth) {
+		cursorXPos = 0;
+		++cursorPage;
+	}
+	if (cursorPage > 7) {
+		cursorPage = 0;
+	}
+	EA = 1;
+}
 
 
 

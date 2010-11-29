@@ -114,7 +114,7 @@ uint8_t getChar(void);
 // color [0..3] -> 0 == white, 3 == black
 void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color);
 
-
+void putchar(char c);
 
 // the interrupt service routines have to be included
 // to main -> see sdcc documentation
