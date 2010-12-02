@@ -1,6 +1,7 @@
 #include <string.h>
 #include "imme.h"
 #include "imme_font.h"
+#include "tinyfont.h"
 
 #define CAST(new_type,old_object) (*((new_type *)&old_object))
 
@@ -10,10 +11,10 @@ __xdata static uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2L];
 
 // double buffer used for audio output
 __xdata static uint8_t audioBuf[ABUF_SIZE*2L];
-uint16_t aBufSwitch;
+__xdata uint16_t aBufSwitch;
 
 // variable to hold the audio callback
-static AudioCallback ac = 0;
+__xdata static AudioCallback ac = 0;
 
 // some low level disp funcs
 void manual_SPI(uint8_t val)
@@ -89,6 +90,7 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 	static uint8_t frameCnt = 0;
 	//static uint8_t frameCnt = 100;
 	uint16_t tmpAddr;
+	uint8_t EA_old = EA;
 	EA = 0;
 	IRCON &= ~0x01; // clear CPU irq flag
 	if (DMAIRQ & 0x01) {
@@ -139,7 +141,7 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 		// trigger first manual if mem is not used
 		DMAREQ |= 0x02;
 	}
-	EA = 1;
+	EA = EA_old;
 
 }
 
@@ -150,7 +152,6 @@ __xdata volatile uint8_t keyChange[8];
 void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
 {
 	static uint8_t callCnt = 0;
-	EA = 0;
 	IRCON &= ~0x08; // clear CPU irq flag
 	if (TIMIF & 0x01) {
 		TIMIF &= ~0x01; // clear flag
@@ -160,6 +161,8 @@ void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
 		// @8khz this would be roughly 30hz
 		if (callCnt++ == 0) {
 			uint8_t tmpSet, gndSet;
+			uint8_t EA_old = EA;
+			EA = 0;
 			// check GND row
 			P1DIR &= 0x03;
 			P0 |= 0x02;
@@ -218,9 +221,9 @@ void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
 			keyChange[7] |= keyStatus[7] ^ tmpSet;
 			keyStatus[7]  = tmpSet;
 			P1DIR &= ~0x80;
+			EA = EA_old;
 		}
 	}
-	EA = 1;
 }
 
 const uint8_t keyLU[192] = {
@@ -253,12 +256,13 @@ const uint8_t keyLU[192] = {
 	0x00, 0x00, 0x00, 0x00,  'L', 0x00, 0x00, 0x00
 };
 
-uint8_t getChar(void)
+uint8_t imme_getChar(void)
 {
 	uint8_t alt  = (keyChange[5] & ~keyStatus[5]) & 0x20;
 	uint8_t caps = (keyChange[4] & ~keyStatus[4]) & 0x08;
 	uint8_t row;
-
+	uint8_t EA_old = EA;
+	EA = 0;
 	for (row = 0; row < 8; ++row) {
 		uint8_t check = keyStatus[row] & keyChange[row];
 		if (check) {
@@ -274,7 +278,6 @@ uint8_t getChar(void)
 			} else {
 				continue;
 			}
-				
 			// get lookup index with de bruijn sequence 0x1D
 			// resulting in mapping:
 			// 0x01 = 0 <-> bit 0
@@ -294,9 +297,11 @@ uint8_t getChar(void)
 			}
 			
 			// get key
+			EA = EA_old;
 			return keyLU[luIdx];
 		}		
 	}
+	EA = EA_old;
 	return 0;
 }
 
@@ -372,9 +377,15 @@ void testPattern(void)
 
 }
 
+static uint8_t  fontWidth;
+static uint8_t *font;
+
 void imme_init(void)
 {
 	EA = 0;
+	fontWidth = tinyfontWidth;
+	font      = tinyfont;
+
 	//-------------------------------------------------------------------------
 	// init the clock
 	
@@ -566,10 +577,19 @@ void imme_green_led(uint8_t state)
 		P2 |=  0x10;
 }
 
+void imme_clr_scr(uint8_t val)
+{
+	uint8_t EA_old = EA;
+	EA = 0;
+	memset(dispBuf,val,DISP_WIDTH*DISP_PAGES*2L);
+	EA = EA_old;
+}
+
 void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color)
 {
 	uint8_t *page;
 	uint8_t m;
+	uint8_t EA_old = EA;
 	EA = 0;
 	page = dispBuf + (y >> 3) * (DISP_WIDTH*2L) + x;
 	m = 1 << (y & 7);
@@ -582,18 +602,58 @@ void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color)
 		*page |= m;
 	else
 		*page &= ~m;
-	EA = 1;
+	EA = EA_old;
+}
+
+void imme_draw_hLine(uint8_t y, uint8_t color)
+{
+	uint8_t i;
+	for (i = 0; i < DISP_WIDTH; ++i)
+		imme_set_pixel(i,y,color);
 }
 
 
+__xdata static uint8_t cursorPage = 0;
+__xdata static uint8_t cursorXPos = 0;
+
+void imme_set_cursor(uint8_t x, uint8_t page)
+{
+	uint8_t EA_old = EA;
+	EA = 0;
+	cursorPage = page;
+	cursorXPos = x;
+	EA = EA_old;
+}
+
+void imme_set_font(uint8_t fIdx)
+{
+
+	uint8_t EA_old = EA;
+	EA = 0;
+	switch (fIdx) {
+		case FONT_TINY :
+			fontWidth = tinyfontWidth;
+			font      = tinyfont;
+			break;
+		case FONT_BIG : 
+			fontWidth = defaultFontWidth;
+			font      = defaultFont;
+			break;
+		default : 
+			fontWidth = tinyfontWidth;
+			font      = tinyfont;
+		 	break;
+	}
+	EA = EA_old;
+
+}
+
 // sdcc provides printf if we provide this 
-void putchar(char c) {
-	const uint8_t  fontWidth = defaultFontWidth;
-	const uint8_t *font      = defaultFont;
-	static uint8_t cursorPage = 0;
-	static uint8_t cursorXPos = 0;
+void putchar(char c) 
+{
 	uint8_t *dispPos;
-	uint8_t x;
+	uint8_t x,changed;
+	uint8_t EA_old = EA;
 	EA = 0;
 	dispPos = dispBuf + cursorPage * (DISP_WIDTH*2L) + cursorXPos;
 	if (c == 0x20){ // space
@@ -604,8 +664,21 @@ void putchar(char c) {
 		cursorXPos = 0;
 		++cursorPage;
 	} else if ((c > 0x20) && (c < 0x7F)) {
+		uint16_t fidx;
+		changed = 0;
+		if (cursorXPos >= DISP_WIDTH-fontWidth) {
+			cursorXPos = 0;
+			++cursorPage;
+			changed = 1;
+		}
+		if (cursorPage > 7) {
+			cursorPage = 0;
+			changed = 1;
+		}
+		if (changed)
+			dispPos = dispBuf + cursorPage * (DISP_WIDTH*2L) + cursorXPos;
 		// print lsb
-		uint16_t fidx = (c - 0x21) * (fontWidth*2);
+		fidx = (c - 0x21) * (fontWidth*2);
 		for (x = 0; x < fontWidth; ++x)
 			dispPos[x] = font[fidx+x];
 		// print msb
@@ -614,14 +687,7 @@ void putchar(char c) {
 		// increase cursor
 		cursorXPos += fontWidth + 1;
 	}
-	if (cursorXPos > DISP_WIDTH-fontWidth) {
-		cursorXPos = 0;
-		++cursorPage;
-	}
-	if (cursorPage > 7) {
-		cursorPage = 0;
-	}
-	EA = 1;
+	EA = EA_old;
 }
 
 

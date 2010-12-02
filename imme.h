@@ -82,7 +82,7 @@ void imme_set_audio_callback(AudioCallback _ac);
 // special chars defined below
 // ALT and CAPS are taken care of... the apropriate
 // modified char will be returned
-uint8_t getChar(void);
+uint8_t imme_getChar(void);
 
 #define KEY_BYE     0xA0
 #define KEY_POWER   0x90
@@ -102,11 +102,14 @@ uint8_t getChar(void);
 // back = (backspace)
 #define KEY_BACK    0x08
 // enter = (carriage return)
-#define KEY_ENTER   0x0D
+#define KEY_ENTER   0x0A
 
 
 
 // some gfx functions
+
+// clears the screen to val
+void imme_clr_scr(uint8_t val);
 
 // set pixel in "real" coordinates
 // x in [0..DISP_WIDTH-1]
@@ -114,6 +117,18 @@ uint8_t getChar(void);
 // color [0..3] -> 0 == white, 3 == black
 void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color);
 
+// sets cursor for printf
+void imme_set_cursor(uint8_t x, uint8_t page);
+
+void imme_draw_hLine(uint8_t y, uint8_t color);
+
+#define FONT_TINY 0
+#define FONT_BIG  1
+
+// sets the font to use 
+void imme_set_font(uint8_t fIdx);
+
+// if this is provided, sdcc provides printf
 void putchar(char c);
 
 // the interrupt service routines have to be included

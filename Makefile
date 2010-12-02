@@ -18,12 +18,13 @@
 
 TARGET = main
 
-libs = imme.rel
+libs = imme.rel tinyfont.rel fahrplan_data.rel imme_font.rel
 #libs = 
 CC = sdcc
 CFLAGS = --no-pack-iram 
-LFLAGS = --xram-loc 0xF000
-#CFLAGS = 
+#LFLAGS = --xram-loc 0xF000
+LFLAGS = --xram-loc 0xF000 --code-size 0x8000 --xram-size 0x0F00
+#CFLAGS = -Iinc --debug  --no-pack-iram
 #LFLAGS = 
 
 all: $(TARGET).hex
