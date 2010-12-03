@@ -226,7 +226,7 @@ void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
 	}
 }
 
-const uint8_t keyLU[192] = {
+__code const uint8_t keyLU[192] = {
 	// normal key section
 	0x00, 0x00,   KEY_POWER,  'o',       'p',     'm',         'n',      'k', 
 	'y',   'g',    KEY_MENU,  'c', KEY_RIGHT,     ',',    KEY_LEFT,      ' ', 

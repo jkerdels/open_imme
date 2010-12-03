@@ -9,5 +9,8 @@
 *.map
 *.rel
 *.sym
+*.layout
+*.adb
 pics/
-
+tools/fontconvert/bin/
+tools/fontconvert/obj/
