@@ -26,7 +26,7 @@
 
 void main(void) 
 {
-	uint8_t dayIdx[3];
+	__xdata uint8_t dayIdx[4];
 	uint8_t curDay;
 	uint8_t idx,keyVal,lastidx,curHr;
 	uint8_t nrOfEntries;
@@ -35,7 +35,7 @@ void main(void)
 	// set up vars
 	EA_old = EA;
 	EA = 0;
-	memset(dayIdx,0,3);
+	memset(dayIdx,0,4);
 	curDay = 0;
 	idx = 0;
 	curHr = fpData[0].fromHr;
@@ -43,10 +43,12 @@ void main(void)
 	keyVal = 0;
 
 	while(fpData[idx].dayloc != 0xFF) {
-		if (((fpData[idx].dayloc & 0xF0) == DAY2) && (dayIdx[1] == 0))
+		if (((fpData[idx].dayloc & 0x0F) == DAY2) && (dayIdx[1] == 0))
 			dayIdx[1] = idx;
-		if (((fpData[idx].dayloc & 0xF0) == DAY3) && (dayIdx[2] == 0))
+		if (((fpData[idx].dayloc & 0x0F) == DAY3) && (dayIdx[2] == 0))
 			dayIdx[2] = idx;
+		if (((fpData[idx].dayloc & 0x0F) == DAY4) && (dayIdx[3] == 0))
+			dayIdx[3] = idx;
 		++idx;
 	}
 	lastidx = 1;
@@ -63,23 +65,20 @@ void main(void)
 	
 		keyVal = imme_getChar();
 		
+		EA_old = EA;
+		EA = 0;
 		switch (keyVal) {
 			case KEY_DOWN : {
-				EA = 0;
 				idx = (idx + 1) % nrOfEntries;
 				curHr = fpData[idx].fromHr;
-				EA = 1;
 			} break;
 			case KEY_UP : {
-				EA = 0;
 				idx = (idx + nrOfEntries - 1) % nrOfEntries;
 				curHr = fpData[idx].fromHr;
-				EA = 1;
 			} break;
 			case KEY_RIGHT : {
 				uint8_t cidx;
 				uint8_t dstSaal;
-				EA = 0;
 				dstSaal = (((fpData[idx].dayloc / 16) & 0xF) + 1) % 3;
 				cidx = (idx + 1) % nrOfEntries;
 				// search saal
@@ -89,12 +88,10 @@ void main(void)
 				while (curHr > fpData[cidx].fromHr)
 					cidx = (cidx + 1) % nrOfEntries;
 				idx = cidx;
-				EA = 1;
 			} break;
 			case KEY_LEFT : {
 				uint8_t cidx;
 				uint8_t dstSaal;
-				EA = 0;
 				dstSaal = (((fpData[idx].dayloc / 16) & 0xF) + 2) % 3;
 				cidx = (idx + 1) % nrOfEntries;
 				// search saal
@@ -104,9 +101,33 @@ void main(void)
 				while (curHr > fpData[cidx].fromHr)
 					cidx = (cidx + 1) % nrOfEntries;
 				idx = cidx;
-				EA = 1;
+			} break;
+			case '1' : {
+				idx = dayIdx[0];
+				curDay = 0;
+			} break;
+			case '2' : {
+				idx = dayIdx[1];
+				curDay = 1;
+			} break;
+			case '3' : {
+				idx = dayIdx[2];
+				curDay = 2;
+			} break;
+			case '4' : {
+				idx = dayIdx[3];
+				curDay = 3;
+			} break;
+			case 'p' : {
+				curDay = (curDay + 1) & 3;
+				idx = dayIdx[curDay];
+			} break;
+			case 'q' : {
+				curDay = (curDay + 3) & 3;
+				idx = dayIdx[curDay];
 			} break;
 		}
+		EA = EA_old;
 		
 
 		EA_old = EA;
