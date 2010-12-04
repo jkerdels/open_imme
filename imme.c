@@ -83,7 +83,7 @@ __xdata uint8_t dmaCfg1N[8];
 // DMA ISR
 // here we switch the audio double buffers and
 // call the buffer-fill callback
-void dma_isr(void) __interrupt (DMA_VECTOR) 
+void dma_isr(void) __interrupt (DMA_VECTOR)
 {
 	static uint8_t curPage = 0;
 	static uint8_t switchCnt = 0;
@@ -107,9 +107,7 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 		DMAARM |= 0x01;
 		if (ac)
 			ac(CAST(uint8_t*,tmpAddr));
-	}
-
-	if (DMAIRQ & 0x02) {
+	} else if (DMAIRQ & 0x02) {
 		uint16_t cnt, k = 0;
 		// clear interrupt flag
 		DMAIRQ     &= ~0x02;
@@ -140,16 +138,114 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 			++k;                        // to prevent flickering...
 		// trigger first manual if mem is not used
 		DMAREQ |= 0x02;
+	} else {
+		DMAIRQ = 0; // clear everything if unkown irq -> should not happen
 	}
 	EA = EA_old;
 
 }
 
+// from Michael Ossmanns Spectrum analyser, modified a little bit
+void stand_by(void)
+{
+	volatile uint8_t desc_high = DMA0CFGH;
+	volatile uint8_t desc_low = DMA0CFGL;
+	xdata uint8_t dma_buf[7] = {0x07,0x07,0x07,0x07,0x07,0x07,0x04};
+	xdata uint8_t dma_desc[8] = {0x00,0x00,0xDF,0xBE,0x00,0x07,0x20,0x42};
+	uint8_t EA_old = EA;
+	EA = 0;
+
+	imme_clr_scr(0);
+	ms_wait(500);
+
+	// kill the display
+	set_display_cmd();
+	manual_SPI(0xAC); // static indicator off
+	manual_SPI(0xAE); // display off
+	manual_SPI(0xA5); // display all points ON
+	set_display_data();
+
+	/* switch to HS RCOSC */
+	SLEEP &= ~0x04;
+	while (!(SLEEP & 0x20));
+	CLKCON = (CLKCON & ~0x07) | 0x40 | 0x04;
+	while (!(CLKCON & 0x40));
+	SLEEP |= 0x04;
+
+	// kill all other irqs
+	IEN1 &= ~0x09;
+
+	// set irq for power button
+	P1IFG  = 0x00; // clear irq flags
+	IRCON2 &= ~0x08;
+	P1IEN |= 0x40; // pin 1_6 (power button)
+	IEN2  |= 0x10;
+	PICTL |= 0x02; // falling edges
+
+	EA = 1;
+
+	/* store descriptors and abort any transfers */
+	desc_high = DMA0CFGH;
+	desc_low = DMA0CFGL;
+	DMAARM |= (0x80 | 0x01);
+
+	/* DMA prep */
+	dma_desc[0] = (uint16_t)&dma_buf >> 8;
+	dma_desc[1] = (uint16_t)&dma_buf;
+	DMA0CFGH = (uint16_t)&dma_desc >> 8;
+	DMA0CFGL = (uint16_t)&dma_desc;
+	DMAARM = 0x01;
+
+	/*
+	 * Any interrupts not intended to wake from sleep should be
+	 * disabled by this point.
+	 */
+
+	/* disable flash cache */
+	MEMCTR |= 0x02;
+
+	/* select sleep mode PM3 and power down XOSC */
+	SLEEP |= (0x03 | 0x04);
+
+	__asm
+   	nop
+   	nop
+   	nop
+	__endasm;
+
+	if (SLEEP & 0x03) {
+		__asm
+		mov 0xD7,#0x01 /* DMAREQ */
+		nop
+		orl 0x87,#0x01 /* last instruction before sleep */
+		nop            /* first instruction after wake */
+		__endasm;
+	}
+
+	/* enable flash cache */
+	MEMCTR &= ~0x02;
+
+	/* restore DMA */
+	DMA0CFGH = desc_high;
+	DMA0CFGL = desc_low;
+	DMAARM = 0x01;
+
+	/* make sure HS RCOSC is stable */
+	while (!(SLEEP & 0x20));
+
+	EA = 0;
+
+	imme_init();
+
+	EA = EA_old;
+}
+
+
 // timer for audio frequency and keyboard stuff
 __xdata volatile uint8_t keyStatus[8];
 __xdata volatile uint8_t keyChange[8];
 
-void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
+void timer3_isr(void) __interrupt (T3_VECTOR)
 {
 	static uint8_t callCnt = 0;
 	IRCON &= ~0x08; // clear CPU irq flag
@@ -223,7 +319,23 @@ void timer3_isr(void) __interrupt (T3_VECTOR) __using (1)
 			P1DIR &= ~0x80;
 			EA = EA_old;
 		}
+	} else {
+		TIMIF = 0x00; // clear everything if unknow irq happens -> should not
 	}
+}
+
+void power_button_isr(void) __interrupt (P1INT_VECTOR)
+{
+	// clear module flag first (port interrupt)
+	P1IFG &= ~0x40;
+	// clear cpu_flag
+	IRCON2 &= ~0x08;
+	// clear sleep
+	SLEEP &= ~SLEEP;
+	// disable irq
+	//IEN2  &= ~0x10;
+	//P1IEN &= ~0x40; // pin 1_6 (power button)
+
 }
 
 __code const uint8_t keyLU[192] = {
@@ -267,6 +379,7 @@ uint8_t imme_getChar(void)
 		uint8_t check = keyStatus[row] & keyChange[row];
 		if (check) {
 			uint8_t luIdx;
+			uint8_t pressedKey;
 			// isolate one key
 			check &= -check;
 			// skip alt or caps key
@@ -298,7 +411,13 @@ uint8_t imme_getChar(void)
 			
 			// get key
 			EA = EA_old;
-			return keyLU[luIdx];
+
+			pressedKey = keyLU[luIdx];
+			// check for power button
+			if (pressedKey == KEY_POWER)
+				stand_by();
+
+			return pressedKey;
 		}		
 	}
 	EA = EA_old;
@@ -407,7 +526,6 @@ void imme_init(void)
 	IEN1 |= 0x09;
 
 	
-	
 	//-------------------------------------------------------------------------
 	// init I/O
 	
@@ -453,6 +571,7 @@ void imme_init(void)
 	P2DIR |=  0x18;
 
 	P0DIR &= 0x3D; // set keyboard input for P0
+
 
 	//-------------------------------------------------------------------------
 	// configure audio

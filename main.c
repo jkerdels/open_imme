@@ -28,7 +28,7 @@ void main(void)
 {
 	__xdata uint8_t dayIdx[4];
 	uint8_t curDay;
-	uint8_t idx,keyVal,lastidx,curHr;
+	uint8_t idx,keyVal,lastidx,curHr,phit;
 	uint8_t nrOfEntries;
 	uint8_t EA_old;
 
@@ -41,6 +41,7 @@ void main(void)
 	curHr = fpData[0].fromHr;
 	//k = 0;
 	keyVal = 0;
+	phit = 0;
 
 	while(fpData[idx].dayloc != 0xFF) {
 		if (((fpData[idx].dayloc & 0x0F) == DAY2) && (dayIdx[1] == 0))
@@ -125,6 +126,11 @@ void main(void)
 			case 'q' : {
 				curDay = (curDay + 3) & 3;
 				idx = dayIdx[curDay];
+			} break;
+			case KEY_POWER : {
+				// trigger refresh
+				lastidx = idx + 1;
+				ms_wait(500);
 			} break;
 		}
 		EA = EA_old;

@@ -133,9 +133,9 @@ void putchar(char c);
 
 // the interrupt service routines have to be included
 // to main -> see sdcc documentation
-void dma_isr(void) __interrupt (DMA_VECTOR) __using (2);
-void timer3_isr(void) __interrupt (T3_VECTOR) __using (1);
-
+void dma_isr(void) __interrupt (DMA_VECTOR);
+void timer3_isr(void) __interrupt (T3_VECTOR);
+void power_button_isr(void) __interrupt (P1INT_VECTOR);
 
 
 #endif

@@ -14,3 +14,5 @@
 pics/
 tools/fontconvert/bin/
 tools/fontconvert/obj/
+tools/teensy-prog/client/bin/
+tools/teensy-prog/client/obj/
