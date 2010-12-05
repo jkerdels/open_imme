@@ -16,3 +16,6 @@ tools/fontconvert/bin/
 tools/fontconvert/obj/
 tools/teensy-prog/client/bin/
 tools/teensy-prog/client/obj/
+tools/gfxconvert/bin/
+tools/gfxconvert/obj/
+
