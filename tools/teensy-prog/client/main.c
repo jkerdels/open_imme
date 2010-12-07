@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     if (hexFile[0] != 0) {
         hexFD = fopen(hexFile,"rb");
         if (hexFD == 0) {
-            printf("unable to open hex file");
+            printf("unable to open hex file\n");
             errorParsing = 1;
         }
     }
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 	// open serial port
 	serialFD = open(serialPort, O_RDWR | O_NOCTTY);
 	if (serialFD == -1) {
-		printf("unable to open serial port");
+		printf("unable to open serial port \"%s\"\n", serialPort);
 		errorParsing = 1;
 	}
 
