@@ -1,0 +1,14 @@
+short user manual:
+
+press space to leave splash screen
+
+up/down = previous/next event
+
+left/right = previous/next saal on same day and time
+
+q/p = previous/next day 
+
+1,2,3,4 = direct jump to a day
+
+
+
