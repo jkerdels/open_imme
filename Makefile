@@ -14,6 +14,10 @@ SOURCES += tinyfont.c
 SOURCES += fahrplan_data.c
 SOURCES += imme_font.c
 SOURCES += fahrplan.c
+SOURCES += tools.c
+SOURCES += gfx.c
+SOURCES += keys.c
+
 
 OBJECTS = $(addprefix $(OBJDIR)/,$(addsuffix .rel,$(basename $(SOURCES))))
 
