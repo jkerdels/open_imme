@@ -10,84 +10,57 @@
 #define LED_PORT    PORTD
 #define LED_BIT     _BV(PD6)
 
-#define DBG_DDR  DDRF
-#define DBG_PORT PORTF
-#define RST      16
-#define DATA_OUT 2
-#define DATA_IN  32
-#define DB_CLK   1
-#define US_DELAY 1
+#define DBG_DDR     DDRB
+#define DBG_PORT    PORTB
+#define DBG_RESET   _BV(PB0)
+#define DBG_CLOCK   _BV(PB1)
+#define DBG_MOSI    _BV(PB2)
+#define DBG_MISO    _BV(PB3)
 
 #define FLASHPAGE_SIZE       1024
 #define FLASH_WORD_SIZE         2
 #define WORDS_PER_FLASH_PAGE  512
 
-void init(void) 
+void init(void)
 {
-    //DBG_PORT = 0x00;
+    DBG_DDR   =  DBG_RESET | DBG_MOSI | DBG_CLOCK;
+    DBG_PORT  =  0;
 
-    // reset low
-    DBG_PORT &= ~RST;
-    _delay_us(US_DELAY);
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(CPHA);
+    SPSR = _BV(SPI2X);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
 
-    // dbg clock high
-    DBG_PORT ^= DB_CLK;
-    _delay_us(US_DELAY);
-    // dbg clock low
-    DBG_PORT ^= DB_CLK;
-    _delay_us(US_DELAY);
-    // dbg clock high
-    DBG_PORT ^= DB_CLK;
-    _delay_us(US_DELAY);
-    // dbg clock low
-    DBG_PORT ^= DB_CLK;
-
-    // reset high
-    _delay_us(US_DELAY);
-    DBG_PORT |= RST;
-
+    DBG_PORT |=  DBG_RESET;
 }
 
-uint8_t send_byte(uint8_t data)
+inline void send_byte(uint8_t data)
 {
-    for (int j = 0; j < 8; ++j) {
-
-        if (data & 0x80)
-            DBG_PORT |= DATA_OUT;
-        else
-            DBG_PORT &= ~DATA_OUT;
-
-        data <<= 1;
-
-        _delay_us(US_DELAY);
-        // dbg clock high
-        DBG_PORT |= DB_CLK;
-
-        _delay_us(US_DELAY);
-
-        // dbg clock low
-        DBG_PORT &= ~DB_CLK;
-
-        // sample
-        if (PINF & DATA_IN)
-            data |= 1;
-    }
-    return data;    
+    DBG_DDR |= DBG_MOSI;
+    SPDR = data;
+    loop_until_bit_is_set(SPSR, SPIF);
 }
 
 
-
-void chip_erase(void)
+inline uint8_t recv_byte(void)
 {
-    send_byte(0x14);
-    send_byte(0); // ignore sent value
+    DBG_DDR &= ~DBG_MOSI;
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    return SPDR;
+}
+
+uint8_t chip_erase(void)
+{
+	send_byte(0x14);
+	return recv_byte();
 }
 
 void write_config(uint8_t cfg)
 {
-    send_byte(0x1D);    
-    send_byte(cfg & 0x0F);  
-    send_byte(0); // ignore sent value
+    send_byte(0x1D);
+    send_byte(cfg & 0x0F);
+    recv_byte(); // ignore sent value
 }
 
 // status bits received by read_status()
@@ -103,34 +76,34 @@ void write_config(uint8_t cfg)
 uint8_t read_status(void)
 {
     send_byte(0x34);
-    return send_byte(0);
+    return recv_byte();
 }
 
 uint16_t get_chip_id(void)
 {
     send_byte(0x68);
-    uint16_t result = send_byte(0);
-    result |= send_byte(0) << 8;
+    uint16_t result = recv_byte();
+    result |= recv_byte() << 8;
     return result;
 }
 
 void cpu_halt(void)
 {
     send_byte(0x44);
-    send_byte(0); // ignore sent value
+    recv_byte(); // ignore sent value
 }
 
 void cpu_resume(void)
 {
     send_byte(0x4C);
-    send_byte(0); // ignore sent value
+    recv_byte(); // ignore sent value
 }
 
 uint8_t debug_instr_1(uint8_t in0)
 {
     send_byte(0x55);    
     send_byte(in0); 
-    return send_byte(0);
+    return recv_byte();
 }
 
 uint8_t debug_instr_2(uint8_t in0, uint8_t in1)
@@ -138,7 +111,7 @@ uint8_t debug_instr_2(uint8_t in0, uint8_t in1)
     send_byte(0x56);    
     send_byte(in0); 
     send_byte(in1); 
-    return send_byte(0);
+    return recv_byte();
 }
 
 uint8_t debug_instr_3(uint8_t in0, uint8_t in1, uint8_t in2)
@@ -147,7 +120,7 @@ uint8_t debug_instr_3(uint8_t in0, uint8_t in1, uint8_t in2)
     send_byte(in0); 
     send_byte(in1); 
     send_byte(in2); 
-    return send_byte(0);
+    return recv_byte();
 }
 
 void read_code_memory(uint16_t address, 
@@ -246,11 +219,7 @@ void write_flash_page(uint32_t address,
     debug_instr_3(0x75,0xC7,0x51);
     set_pc(0xF000 + FLASHPAGE_SIZE);
     cpu_resume();
-    uint8_t status;
-    do {
-        _delay_ms(100);
-        status = read_status();
-    } while (!(status & ST_CPU_HALTED));
+    while (!(read_status() & ST_CPU_HALTED));
 }
 
 
@@ -264,11 +233,7 @@ void mass_erase_flash(void)
 {
     debug_instr_1(0x00);
     chip_erase();
-    uint8_t status = 0;
-    do {
-        _delay_ms(100);
-        status = read_status();
-    } while (!(status & ST_CHIP_ERASE_DONE));
+    while (!(read_status() & ST_CHIP_ERASE_DONE));
 }
 
 
@@ -295,9 +260,6 @@ int main(void)
 
     int16_t r;
     uint8_t cmd;
-
-    DBG_DDR = RST | DB_CLK | DATA_OUT;
-    DBG_PORT = RST;
 
     while (1) {
         LED_PORT &= ~LED_BIT;
