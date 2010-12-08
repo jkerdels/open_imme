@@ -50,10 +50,10 @@ inline uint8_t recv_byte(void)
     return SPDR;
 }
 
-uint8_t chip_erase(void)
+void chip_erase(void)
 {
-	send_byte(0x14);
-	return recv_byte();
+    send_byte(0x14);
+    recv_byte(); // ignore sent value
 }
 
 void write_config(uint8_t cfg)
