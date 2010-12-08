@@ -65,35 +65,43 @@ void fp_process_keys(void)
 		case KEY_DOWN : {
 			curEntry = (curEntry + 1) % nrOfEntries;
 			curHr = fpData[curEntry].fromHr;
+			curDay = fpData[curEntry].dayloc & 0xF;
 		} break;
 		case KEY_UP : {
 			curEntry = (curEntry + nrOfEntries - 1) % nrOfEntries;
 			curHr = fpData[curEntry].fromHr;
+			curDay = fpData[curEntry].dayloc & 0xF;
 		} break;
 		case KEY_RIGHT : {
 			uint8_t cidx;
 			uint8_t dstSaal;
 			dstSaal = (((fpData[curEntry].dayloc / 16) & 0xF) + 1) % 3;
-			cidx = (curEntry + 1) % nrOfEntries;
+			cidx = ((curEntry - dayIdx[curDay] + 1) % daySize[curDay]) + 
+                   dayIdx[curDay];
 			// search saal
 			while (((fpData[cidx].dayloc / 16) & 0xF) != dstSaal)
-				cidx = (cidx + 1) % nrOfEntries;
+				cidx = ((cidx - dayIdx[curDay] + 1) % daySize[curDay]) + 
+                       dayIdx[curDay];
 			// search time
 			while (curHr > fpData[cidx].fromHr)
-				cidx = (cidx + 1) % nrOfEntries;
+				cidx = ((cidx - dayIdx[curDay] + 1) % daySize[curDay]) + 
+                       dayIdx[curDay];
 			curEntry = cidx;
 		} break;
 		case KEY_LEFT : {
 			uint8_t cidx;
 			uint8_t dstSaal;
 			dstSaal = (((fpData[curEntry].dayloc / 16) & 0xF) + 2) % 3;
-			cidx = (curEntry + 1) % nrOfEntries;
+			cidx = ((curEntry - dayIdx[curDay] + 1) % daySize[curDay]) + 
+                   dayIdx[curDay];
 			// search saal
 			while (((fpData[cidx].dayloc / 16) & 0xF) != dstSaal)
-				cidx = (cidx + 1) % nrOfEntries;
+				cidx = ((cidx - dayIdx[curDay] + 1) % daySize[curDay]) + 
+                       dayIdx[curDay];
 			// search time
 			while (curHr > fpData[cidx].fromHr)
-				cidx = (cidx + 1) % nrOfEntries;
+				cidx = ((cidx - dayIdx[curDay] + 1) % daySize[curDay]) + 
+                       dayIdx[curDay];
 			curEntry = cidx;
 		} break;
 		case '1' : {
