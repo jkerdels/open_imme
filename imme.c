@@ -7,10 +7,12 @@
 
 // buffer used for the display with
 // 2 bit per pixel (4 grayscales)
-__xdata static uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2L];
+__xdata static uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2];
+
+__xdata const uint16_t dispLineStep = DISP_WIDTH*2;
 
 // double buffer used for audio output
-__xdata static uint8_t audioBuf[ABUF_SIZE*2L];
+__xdata static uint8_t audioBuf[ABUF_SIZE*2];
 __xdata uint16_t aBufSwitch;
 
 // variable to hold the audio callback
@@ -150,8 +152,8 @@ void stand_by(void)
 {
 	volatile uint8_t desc_high = DMA0CFGH;
 	volatile uint8_t desc_low = DMA0CFGL;
-	xdata uint8_t dma_buf[7] = {0x07,0x07,0x07,0x07,0x07,0x07,0x04};
-	xdata uint8_t dma_desc[8] = {0x00,0x00,0xDF,0xBE,0x00,0x07,0x20,0x42};
+	__xdata uint8_t dma_buf[7] = {0x07,0x07,0x07,0x07,0x07,0x07,0x04};
+	__xdata uint8_t dma_desc[8] = {0x00,0x00,0xDF,0xBE,0x00,0x07,0x20,0x42};
 	uint8_t EA_old = EA;
 	EA = 0;
 
@@ -475,28 +477,7 @@ void imme_set_audio_callback(AudioCallback _ac)
 }
 
 
-void testPattern(void)
-{
-	uint8_t col;
-	uint8_t *curPixel;
-	curPixel = dispBuf + DISP_WIDTH*8;
-
-	for (col = 0; col < 132; ++col) 
-		*(curPixel++) = 0xFF;
-	for (col = 0; col < 132; ++col) 
-		*(curPixel++) = 0x00;
-	for (col = 0; col < 132; ++col) 
-		*(curPixel++) = 0x00;
-	for (col = 0; col < 132; ++col) 
-		*(curPixel++) = 0xFF;
-	for (col = 0; col < 132; ++col) 
-		*(curPixel++) = 0xFF;
-	for (col = 0; col < 132; ++col) 
-		*(curPixel++) = 0xFF;
-
-}
-
-static uint8_t  fontWidth;
+static uint8_t fontWidth;
 static uint8_t *font;
 
 void imme_init(void)
@@ -650,7 +631,8 @@ void imme_init(void)
 	dmaCfg1N[1] = (uint16_t)(dispBuf);
 	dmaCfg1N[2] = 0xDF; //(uint16_t)(&U0DBUF) >> 8;
 	dmaCfg1N[3] = 0xC1; //(uint16_t)(&U0DBUF)
-	dmaCfg1N[4] = (DISP_WIDTH >> 8) & 0x1F;
+//	dmaCfg1N[4] = (DISP_WIDTH >> 8) & 0x1F;
+	dmaCfg1N[4] = 0;
 	dmaCfg1N[5] = DISP_WIDTH & 0xFF;
 	dmaCfg1N[6] = 0x0F; // trigger with Usart0 TX complete
 	dmaCfg1N[7] = 0x48; // low priority
@@ -673,8 +655,6 @@ void imme_init(void)
 	// trigger first manual
 	DMAREQ |= 0x02;
 	
-	//testPattern();
-
 	// enable interrupts globally
 	EA = 1;
 
@@ -706,7 +686,7 @@ void imme_clr_scr(uint8_t val)
 
 void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color)
 {
-	uint8_t *page;
+	__xdata uint8_t *page;
 	uint8_t m;
 	uint8_t EA_old = EA;
 	EA = 0;
@@ -770,7 +750,7 @@ void imme_set_font(uint8_t fIdx)
 // sdcc provides printf if we provide this 
 void putchar(char c) 
 {
-	uint8_t *dispPos;
+	__xdata uint8_t *dispPos;
 	uint8_t x,changed;
 	uint8_t EA_old = EA;
 	EA = 0;
@@ -807,6 +787,185 @@ void putchar(char c)
 		cursorXPos += fontWidth + 1;
 	}
 	EA = EA_old;
+}
+
+
+
+void imme_clear_region(uint8_t x, 
+                       uint8_t y, 
+                       uint8_t w, 
+                       uint8_t h,
+					   uint8_t val)
+{
+	__xdata uint8_t *dstLSB;
+	__xdata uint8_t *dstMSB;
+	uint8_t subPages;
+	uint8_t p,lx,m;
+	uint16_t dlDist = DISP_WIDTH * 2L;
+	uint8_t EA_old = EA;
+	EA = 0;
+
+	p = DISP_WIDTH - x;
+	if (w > p)
+		w = p;
+
+	dlDist -= w;
+
+	p = DISP_HEIGHT - y;
+	if (h > p)
+		h = p;
+
+	p = y & 7;
+
+	m = (1 << p) - 1;
+
+	lx = 8 - p;
+	if (lx > h) {
+		m |= ~((1 << (p+h)) - 1);
+		h = 0;
+	} else {
+		h -= lx;
+	}
+
+	subPages = h >> 3;
+
+	// first line
+	dstLSB = dispBuf + ((DISP_WIDTH * 2L) * (y >> 3)) + x;
+	dstMSB  = dstLSB  + DISP_WIDTH;
+	for (lx = 0; lx < w; ++lx) {
+		*dstLSB = (*dstLSB & m) | (val & ~m);
+		++dstLSB;
+		*dstMSB = (*dstMSB & m) | (val & ~m);
+		++dstMSB;
+	}
+	dstLSB += dlDist;
+	dstMSB += dlDist;
+	for (p = 0; p < subPages; ++p) {
+		for (lx = 0; lx < w; ++lx) {
+			*(dstLSB++) = val;
+			*(dstMSB++) = val;
+		}
+		dstLSB += dlDist;
+		dstMSB += dlDist;
+	}
+	p = h & 7;	
+	if (p > 0) {
+		m = (1 << p) - 1;
+		for (lx = 0; lx < w; ++lx) {
+			*dstLSB = (*dstLSB & ~m) | (val & m);
+			++dstLSB;
+			*dstMSB = (*dstMSB & ~m) | (val & m);
+			++dstMSB;
+		}
+	}
+	
+
+	EA = EA_old;
+}
+
+
+void imme_draw_gfx(uint8_t x, uint8_t y, __code uint8_t *gfx, uint8_t useMask)
+{
+	__code uint8_t *gfxMask;
+	__code uint8_t *gfxLSB;
+	__code uint8_t *gfxMSB;
+	__xdata uint8_t *dstLSB;
+	__xdata uint8_t *dstMSB;
+	uint8_t subWidth, subHeight, subPages;
+	uint8_t p,lx,shiftL,shiftR;
+	uint16_t lDist = gfx[0] + gfx[0] + gfx[0];
+	uint16_t dlDist = DISP_WIDTH * 2L;
+	uint8_t EA_old = EA;
+	EA = 0;
+
+	subWidth = gfx[0];
+	p = DISP_WIDTH - x;
+	if (subWidth > p)
+		subWidth = p;
+
+	dlDist -= subWidth;
+	lDist  -= subWidth;
+
+	subHeight = gfx[1];
+	p = DISP_HEIGHT - y;
+	if (subHeight > p)
+		subHeight = p;
+
+
+
+	shiftL = y & 7;
+	shiftR = 8 - shiftL;
+	
+	p = 8 - shiftL;
+	if (p > subHeight)
+		subHeight = 0;
+	else
+		subHeight -= p;
+	
+	subPages = subHeight >> 3;
+
+	if ((subHeight & 7) > 0)
+		++subPages;
+
+	// first line
+	gfxMask = gfx+2;
+	gfxLSB  = gfxMask + gfx[0];
+	gfxMSB  = gfxLSB  + gfx[0];
+	dstLSB  = dispBuf + ((DISP_WIDTH * 2L) * (y >> 3)) + x;
+	dstMSB  = dstLSB  + DISP_WIDTH;
+	for (lx = 0; lx < subWidth; ++lx) {
+		uint8_t m;
+		if (useMask)
+			m = ~(*(gfxMask++) << shiftL);
+		else
+			m = (1 << shiftL) - 1;
+		*dstLSB = (*dstLSB & m) | (*(gfxLSB++) << shiftL);
+		*dstMSB = (*dstMSB & m) | (*(gfxMSB++) << shiftL);
+		++dstLSB;
+		++dstMSB;
+	}
+	gfxMask -= subWidth;
+	gfxLSB  -= subWidth;
+	gfxMSB  -= subWidth;
+	dstLSB  += dlDist;
+	dstMSB  += dlDist;
+	for (p = 0; p < subPages; ++p) {
+		for (lx = 0; lx < subWidth; ++lx) {
+			uint8_t m;
+			if (useMask)
+				m = ~(*(gfxMask++) >> shiftR);
+			else
+				m = ~((1 << shiftL) - 1);
+			*dstLSB = (*dstLSB & m) | (*(gfxLSB++) >> shiftR);
+			*dstMSB = (*dstMSB & m) | (*(gfxMSB++) >> shiftR);
+			++dstLSB;
+			++dstMSB;
+		}
+		gfxMask += lDist;
+		gfxLSB  += lDist;
+		gfxMSB  += lDist;
+		dstLSB  -= subWidth;
+		dstMSB  -= subWidth;
+		for (lx = 0; lx < subWidth; ++lx) {
+			uint8_t m;
+			if (useMask)
+				m = ~(*(gfxMask++) << shiftL);
+			else
+				m = (1 << shiftL) - 1;
+			*dstLSB = (*dstLSB & m) | (*(gfxLSB++) << shiftL);
+			*dstMSB = (*dstMSB & m) | (*(gfxMSB++) << shiftL);
+			++dstLSB;
+			++dstMSB;
+		}
+		gfxMask -= subWidth;
+		gfxLSB  -= subWidth;
+		gfxMSB  -= subWidth;
+		dstLSB  += dlDist;
+		dstMSB  += dlDist;
+	}
+
+	EA = EA_old;
+
 }
 
 
