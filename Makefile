@@ -1,48 +1,106 @@
-# Copyright 2010 Jochen Kerdels, original template by Travis Goodspeed
-# and Michael Ossmann
+# Object files directory
+# Warning: This will be removed by make clean!
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
+OBJDIR = obj
+
+# Target file name (without extension)
+TARGET = $(OBJDIR)/main
+
+# Define all c source files (dependencies are generated automatically)
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+SOURCES  = main.c
+SOURCES += imme.c
+SOURCES += tinyfont.c
+SOURCES += fahrplan_data.c
+SOURCES += imme_font.c
+SOURCES += fahrplan.c
+SOURCES += tools.c
+SOURCES += gfx.c
+SOURCES += keys.c
+
+
+OBJECTS = $(addprefix $(OBJDIR)/,$(addsuffix .rel,$(basename $(SOURCES))))
+
+# Compiler options
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
+CFLAGS   = --no-pack-iram
 
-TARGET = main
+# Linker Options
+#
+LDFLAGS  = --code-size 0x8000 
+LDFLAGS += --xram-loc 0xF000 
+LDFLAGS += --xram-size 0x0F00
 
-libs = imme.rel \
-       tinyfont.rel \
-       fahrplan_data.rel \
-       imme_font.rel \
-       fahrplan.rel \
-       tools.rel \
-       gfx.rel \
-       keys.rel
+# TeensyProg Options
+#
+TEENSY_FLAGS = -P /dev/ttyACM0
+#TEENSY_FLAGS = -P /dev/com8   
 
-#libs = 
-CC = sdcc
-CFLAGS = --no-pack-iram 
-#LFLAGS = --xram-loc 0xF000
-LFLAGS = --xram-loc 0xF000 --code-size 0x8000 --xram-size 0x0F00
-#CFLAGS = -Iinc
-#LFLAGS = 
 
-all: $(TARGET).hex
+# Define programs and commands
+#
+CC           = sdcc
+PACKIHX      = packihx
+TEENSY_PROG  = tools/teensy-prog/client/main
 
-%.rel : %.c
-	$(CC) $(CFLAGS) -c $<
 
-main.hex: $(TARGET).rel $(libs)
-	sdcc $(LFLAGS) $(TARGET).rel $(libs)
-	packihx <$(TARGET).ihx >$(TARGET).hex
+# Default target
+#
+all:  ccversion hex
+hex:  $(TARGET).hex
 
+
+# Create object files directory
+#
+$(shell mkdir -p $(OBJDIR) 2>/dev/null)
+
+
+# Display compiler version information
+#
+ccversion: 
+	@$(CC) --version
+
+
+# Compile: create object files from C source files
+#
+$(OBJDIR)/%.rel : %.c
+	@echo
+	@echo Compiling C: $<
+	$(CC) $(CFLAGS) -c $< -o $@ 
+
+
+# Link: create IHX output file from object files
+#
+.SECONDARY: $(TARGET).ihx
+.PRECIOUS:  $(OBJECTS)
+$(TARGET).ihx: $(OBJECTS)
+	@echo
+	@echo Linking: $@
+	$(CC) $(LDFLAGS) -o $(TARGET).ihx $^
+	#-o $@ 
+
+
+# Create final output file
+#
+%.hex: %.ihx
+	@echo
+	@echo Packing hex file: $@
+	$(PACKIHX) <$(TARGET).ihx >$(TARGET).hex
+
+
+# Program the device
+#
+flash: $(TARGET).hex
+	$(TEENSY_PROG) $(TEENSY_FLAGS) -f $(TARGET).hex
+
+
+# Clean project
+#
 clean:
-	rm -f *.hex *.ihx *.rel *.asm *.lst *.rst *.sym *.lnk *.map *.mem
+	@echo Cleaning project:
+	rm -rf $(OBJDIR)
+
+
+# Listing of phony targets.
+#
+.PHONY: all ccversion hex flash clean
