@@ -1,0 +1,5 @@
+*.eep
+*.elf
+*.lss
+*.o
+.dep
