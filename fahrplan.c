@@ -285,6 +285,7 @@ void fp_intro(void)
 			}
 			imme_set_font(FONT_BIG);
 		}
+		imme_key_io();
 	}
 }
 
@@ -292,6 +293,7 @@ void fp_run(void)
 {
 	fp_intro();
 	while (1) {
+		imme_key_io();
 		fp_process_keys();
 		fp_render();
 		ms_wait(25);

@@ -1,5 +1,5 @@
-#ifndef IMME_H
-#define IMME_H
+#ifndef TOOLS_H
+#define TOOLS_H
 
 /*
  * Copyright 2010 Jochen Kerdels
@@ -20,21 +20,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
-#include <stdint.h>
 #include <cc1110.h>
+#include <stdint.h>
 
-#include "tools.h"
-#include "gfx.h"
-#include "keys.h"
+#define CAST(new_type,old_object) (*((new_type *)&old_object))
 
-// call this once to initialize the imme
-void imme_init(void);
+// busy waiting wait, time in milliseconds
+void ms_wait(uint16_t time); 
 
-// state == 1 -> on, 0 -> off
-void imme_red_led(uint8_t state);
-void imme_green_led(uint8_t state);
+void imme_stand_by(void);
+
+// the interrupt service routines have to be included
+// to main -> see sdcc documentation
+void power_button_isr(void) __interrupt (P1INT_VECTOR);
 
 
 #endif
+
+
 

@@ -18,7 +18,15 @@
 
 TARGET = main
 
-libs = imme.rel tinyfont.rel fahrplan_data.rel imme_font.rel fahrplan.rel
+libs = imme.rel \
+       tinyfont.rel \
+       fahrplan_data.rel \
+       imme_font.rel \
+       fahrplan.rel \
+       tools.rel \
+       gfx.rel \
+       keys.rel
+
 #libs = 
 CC = sdcc
 CFLAGS = --no-pack-iram 
