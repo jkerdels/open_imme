@@ -122,6 +122,15 @@ void imme_set_cursor(uint8_t x, uint8_t page);
 
 void imme_draw_hLine(uint8_t y, uint8_t color);
 
+void imme_draw_gfx(uint8_t x, uint8_t y,__code uint8_t *gfx, uint8_t useMask);
+
+void imme_clear_region(uint8_t x, 
+                       uint8_t y, 
+                       uint8_t w, 
+                       uint8_t h,
+					   uint8_t val);
+
+
 #define FONT_TINY 0
 #define FONT_BIG  1
 

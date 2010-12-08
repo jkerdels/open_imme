@@ -11,6 +11,10 @@
 *.sym
 *.layout
 *.adb
+*.eep
+*.elf
+*.lss
+*.o
 pics/
 tools/fontconvert/bin/
 tools/fontconvert/obj/
@@ -18,4 +22,5 @@ tools/teensy-prog/client/bin/
 tools/teensy-prog/client/obj/
 tools/gfxconvert/bin/
 tools/gfxconvert/obj/
+tools/teensy-prog/teensy/.dep/
 

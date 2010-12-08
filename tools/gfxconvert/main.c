@@ -224,14 +224,22 @@ int main(int argc, char *argv[])
 
     printf("#ifndef %s\n#define %s\n\n#include <stdint.h>\n\n",defBuf,defBuf);
 
-    printf("__xdata const uint8_t %sWidth  = %i;\n\n",argv[3],gfxwidth);
-    printf("__xdata const uint8_t %sHeight = %i;\n\n",argv[3],gfxheight);
-
     printf("__code const uint8_t %s[] = {\n",argv[3]);
+
+    printf("    0x%X, 0x%X, // width and height\n",gfxwidth,gfxheight);
 
     int x,page;
 
     for (page = 0; page < (gfxheight / 8); ++page) {
+        printf("    ");
+        for (x = 0; x < gfxwidth; ++x) {
+            uint8_t curCol = 0;
+            for (i = 0; i < 8; ++i)
+                curCol |= ((data[(((page*8)+i)*gfxwidth)+x] & 4) >> 2) << i;
+            printf("0x%X, ",curCol);
+        }
+        printf(" // MASK\n");
+
         printf("    ");
         for (x = 0; x < gfxwidth; ++x) {
             uint8_t curCol = 0;
@@ -250,14 +258,6 @@ int main(int argc, char *argv[])
         }
         printf(" // MSB\n");
 
-        printf("    ");
-        for (x = 0; x < gfxwidth; ++x) {
-            uint8_t curCol = 0;
-            for (i = 0; i < 8; ++i)
-                curCol |= ((data[(((page*8)+i)*gfxwidth)+x] & 4) >> 2) << i;
-            printf("0x%X, ",curCol);
-        }
-        printf(" // MASK\n");
     }
     // remaining lines
     page = gfxheight / 8;
