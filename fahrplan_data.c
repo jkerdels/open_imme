@@ -48,9 +48,9 @@ __code const FPItem fpData[] = {
 	LANG_ENG | EV_LECTURE | TR_SOCIETY	
 },{
 	DAY1 | SAAL1,14,00,15,00,
-	"Von Zensursula über Censilia",
+	"Von Zensursula ueber Censilia",
 	"hin zum Kindernet",
-	"Jahresrückblick rund um Internet",
+	"Jahresruckblick rund um Internet",
 	"Sperren, Sendezeitbegrenzungen",
 	"im Internet und vermeintlichen",
 	"Jugendschutz | Alvar C.H.Freude",
@@ -73,7 +73,7 @@ __code const FPItem fpData[] = {
 	"Why the time is now to get",
 	"active",
 	"Katarzyna Szymielewicz, Patrick",
-	"Breyer, Ralf Bendrath",
+	"Breyer, Ralf Bendrath, axel",
 	2,
 	LANG_ENG | EV_LECTURE | TR_SOCIETY
 },{
@@ -110,7 +110,7 @@ __code const FPItem fpData[] = {
 	DAY1 | SAAL2,16,00,17,00,
 	"Eins, zwei, drei - alle sind",
 	"dabei",
-	"Von der Volkszählung zum Bundes-",
+	"Von der Volkszaehlung zum Bundes-",
 	"melderegister",
 	"",
 	"Oliver \"Unicorn\" Knapp",
@@ -133,7 +133,7 @@ __code const FPItem fpData[] = {
 	"then some",
 	"",
 	"",
-	"",
+	"Ilja van Sprundel",
 	1,
 	LANG_ENG | EV_LECTURE | TR_HACKING
 },{
@@ -143,7 +143,7 @@ __code const FPItem fpData[] = {
 	"you're doing it confused? weird?",
     "strange? wrong?",
 	"",
-	"",
+	"datenwolf",
 	2,
 	LANG_ENG | EV_LECTURE | TR_COMMUNITY	
 },{
@@ -246,6 +246,16 @@ __code const FPItem fpData[] = {
 	"Daniel J. Bernstein",
 	2,
 	LANG_ENG | EV_LECTURE | TR_HACKING
+},{	
+	DAY2 | SAAL1,21,45,22,45,
+	"Defense is not dead",
+	"Why we will have more secure",
+	"computers - tomorrow",
+	"",
+	"",
+    "Andreas Bogk",
+	1,
+	LANG_ENG | EV_LECTURE | TR_HACKING
 },{										
 	DAY2 | SAAL1,23,00,00,00,
 	"The importance of resisting",
@@ -303,7 +313,7 @@ __code const FPItem fpData[] = {
 	"Pneumatik",
 	"",
 	"",
-    "Aepex",
+    "Aepex, xif",
 	1,
 	LANG_GER | EV_LECTURE | TR_MAKING
 },{	
@@ -317,23 +327,13 @@ __code const FPItem fpData[] = {
 	1,
 	LANG_ENG | EV_LECTURE | TR_COMMUNITY
 },{	
-	DAY2 | SAAL2,17,15,18,15,
-	"Defense is not dead",
-	"Why we will have more secure",
-	"computers - tomorrow",
-	"",
-	"",
-    "Andreas Bogk",
-	1,
-	LANG_ENG | EV_LECTURE | TR_HACKING
-},{	
 	DAY2 | SAAL2,18,30,19,30,
 	"Literarischer Abend",
 	"",
 	"",
 	"",
 	"",
-    "Andreas Lehner, lars",
+    "Andreas Lehner, Dr. lars",
 	1,
 	LANG_GER | EV_PODIUM | TR_COMMUNITY
 },{	
@@ -513,7 +513,7 @@ __code const FPItem fpData[] = {
 	"Where does the sound come from?",
     "",
 	"",
-	"syso",
+	"Sylwester S.",
 	2,
 	LANG_ENG | EV_LECTURE | TR_MAKING
 },{										
@@ -567,23 +567,13 @@ __code const FPItem fpData[] = {
 	1,
 	LANG_ENG | EV_LTALK | TR_COMMUNITY
 },{										
-	DAY3 | SAAL3, 14,00,15,00,
-	"Building the ZombieGotcha",
-	"How to eat friends and",
-	"influence people.",
-    "",
-	"",
-	"Eli Skipp, Travis Goodspeed",
-	1,
-	LANG_ENG | EV_LECTURE | TR_MAKING
-},{										
 	DAY3 | SAAL3, 16,00,17,00,
 	"Safety on the Open Sea",
 	"Safe navigation with the aid of",
 	"an open sea chart.",
     "",
 	"",
-	"",
+	"Bernhard Fischer",
 	1,
 	LANG_ENG | EV_LECTURE | TR_SCIENCE
 },{										
@@ -653,7 +643,7 @@ __code const FPItem fpData[] = {
 	"most ISPs see you doing on the",
     "internet",
 	"",
-	"",
+	"Jeroen Massar",
 	1,
 	LANG_ENG | EV_LECTURE | TR_SOCIETY
 },{										
@@ -717,6 +707,16 @@ __code const FPItem fpData[] = {
 	3,
 	LANG_ENG | EV_LECTURE | TR_HACKING
 },{										
+	DAY4 | SAAL2,16,00,17,00,
+	"International Cyber Jurisdiction",
+	"Kill Switching Cyberspace, Cyber",
+	"Criminal Prosecution &",
+    "Jurisdiction Hopping",
+	"",
+	"TiffanyRad",
+	1,
+	LANG_ENG | EV_LECTURE | TR_HACKING
+},{										
 	DAY4 | SAAL2,17,15,18,00,
 	"News Key Recovery Attacks on",
 	"RC4/WEP",
@@ -727,16 +727,6 @@ __code const FPItem fpData[] = {
 	2,
 	LANG_ENG | EV_LECTURE | TR_HACKING
 },{										// DAY 4, SAAL 3
-	DAY4 | SAAL3,11,30,12,30,
-	"A hacker's view on motor",
-	"control and robotics",
-	"",
-    "",
-	"",
-	"",
-	2,
-	LANG_ENG | EV_LECTURE | TR_MAKING
-},{										
 	DAY4 | SAAL3,12,45,13,45,
 	"Lightning Talks - Day 4",
 	"where is my community?",

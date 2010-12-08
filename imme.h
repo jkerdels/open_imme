@@ -70,7 +70,7 @@ void imme_green_led(uint8_t state);
 
 
 // signature of audio callback function
-typedef void (*AudioCallback)(uint8_t *data);
+typedef void (*AudioCallback)(uint8_t *buf);
 
 // register a callback function which fills the
 // audio buffer with ABUF_SIZE bytes
