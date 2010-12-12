@@ -65,9 +65,9 @@ void imme_draw_hLine(uint8_t y, uint8_t color);
  * This function draws a bitmapped graphic (created with the gfxconvert tool)
  * using the top,left position of (x,y). The parameter 'useMask' is a boolean
  * (0 == false, 1 == true) which disables/enables using of the mask of the gfx.
- * Clipping to right and bottom is taken care of.
+ * Clipping is taken care of.
  */
-void imme_draw_gfx(uint8_t x, uint8_t y,__code uint8_t *gfx, uint8_t useMask);
+void imme_draw_gfx(int16_t x, int16_t y,__code uint8_t *gfx, uint8_t useMask);
 
 
 /*

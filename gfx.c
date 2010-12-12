@@ -473,9 +473,9 @@ void imme_clear_region(uint8_t x,
  * This function draws a bitmapped graphic (created with the gfxconvert tool)
  * using the top,left position of (x,y). The parameter 'useMask' is a boolean
  * (0 == false, 1 == true) which disables/enables using of the mask of the gfx.
- * Clipping to right and bottom is taken care of.
+ * Clipping is taken care of.
  */
-void imme_draw_gfx(uint8_t x, uint8_t y, __code uint8_t *gfx, uint8_t useMask)
+void imme_draw_gfx(int16_t x, int16_t y, __code uint8_t *gfx, uint8_t useMask)
 {
 	__code uint8_t *gfxMask;
 	__code uint8_t *gfxLSB;
@@ -483,13 +483,30 @@ void imme_draw_gfx(uint8_t x, uint8_t y, __code uint8_t *gfx, uint8_t useMask)
 	__xdata uint8_t *dstLSB;
 	__xdata uint8_t *dstMSB;
 	uint8_t subWidth, subHeight, subPages;
-	uint8_t p,lx,shiftL,shiftR;
+	uint8_t p,lx,shiftL,shiftR,xo,yo;
 	uint16_t lDist = gfx[0] + gfx[0] + gfx[0];
 	uint16_t dlDist = DISP_WIDTH * 2L;
 	uint8_t EA_old = EA;
 	EA = 0;
 
+	xo = 0;
+	yo = 0;
+
+	if ((x >= DISP_WIDTH)  ||
+        (y >= DISP_HEIGHT) ||
+        (x + (int16_t)(gfx[0]) <= 0) ||
+        (y + (int16_t)(gfx[1]) <= 0)) 
+	{
+		EA = EA_old;
+		return;
+	}
+
 	subWidth = gfx[0];
+	if (x < 0) {
+		xo = -x;
+		subWidth -= xo;
+		x = 0;
+	}
 	p = DISP_WIDTH - x;
 	if (subWidth > p)
 		subWidth = p;
@@ -498,6 +515,11 @@ void imme_draw_gfx(uint8_t x, uint8_t y, __code uint8_t *gfx, uint8_t useMask)
 	lDist  -= subWidth;
 
 	subHeight = gfx[1];
+	if (y < 0) {
+		yo = -y;
+		subHeight -= yo;
+		y = 0;
+	}
 	p = DISP_HEIGHT - y;
 	if (subHeight > p)
 		subHeight = p;
@@ -519,7 +541,7 @@ void imme_draw_gfx(uint8_t x, uint8_t y, __code uint8_t *gfx, uint8_t useMask)
 		++subPages;
 
 	// first line
-	gfxMask = gfx+2;
+	gfxMask = gfx+2+xo+(yo*lDist);
 	gfxLSB  = gfxMask + gfx[0];
 	gfxMSB  = gfxLSB  + gfx[0];
 	dstLSB  = dispBuf + ((DISP_WIDTH * 2L) * (y >> 3)) + x;
