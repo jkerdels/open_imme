@@ -9,3 +9,6 @@ tools/gfxconvert/bin/
 tools/gfxconvert/obj/
 tools/teensy-prog/teensy/.dep/
 
+tools/fontconvert/fontconvert.layout
+tools/gfxconvert/gfxconvert.layout
+tools/teensy-prog/client/immeFlash.layout
