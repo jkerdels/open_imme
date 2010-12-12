@@ -1,6 +1,12 @@
 #include "imme.h"
 
-// some busy waiting
+
+__xdata uint8_t dmaCfg1N[NR_OF_DMA_ENTRIES*8];
+
+
+/*
+ * simple busy waiting 
+ */
 void ms_wait(uint16_t time)
 {
 	while (time--) {
@@ -12,11 +18,11 @@ void ms_wait(uint16_t time)
 }
 
 
-
-
-
-
-// from Michael Ossmanns Spectrum analyser, modified a little bit
+/*
+ * Puts the imme into standby mode.
+ * A press of the power button wakes the imme up again.
+ * Original src from Michael Ossmanns Spectrum analyser, modified a little bit
+ */
 void imme_stand_by(void)
 {
 	volatile uint8_t desc_high = DMA0CFGH;
@@ -26,7 +32,7 @@ void imme_stand_by(void)
 	uint8_t EA_old = EA;
 	EA = 0;
 
-	// kill the display
+	// kill the display, see gfx.h/gfx.c for details
 	imme_display_standby();
 
 	/* switch to HS RCOSC */
@@ -104,7 +110,9 @@ void imme_stand_by(void)
 	EA = EA_old;
 }
 
-
+/*
+ * Interrupt service routine of Power-Button used to wake imme up
+ */
 void power_button_isr(void) __interrupt (P1INT_VECTOR)
 {
 	// clear module flag first (port interrupt)

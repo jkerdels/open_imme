@@ -59,7 +59,7 @@ void fp_process_keys(void)
 	uint8_t EA_old = EA;
 	EA = 0;
 
-	keyVal = imme_getChar();
+	keyVal = imme_get_char();
 	
 	switch (keyVal) {
 		case KEY_DOWN : {
@@ -242,7 +242,7 @@ void fp_intro(void)
 	while(1) {
 		uint8_t x = rocket[1]-1;
 		uint8_t y = DISP_HEIGHT-rocket[1];
-		uint8_t keyVal = imme_getChar();
+		uint8_t keyVal = imme_get_char();
 		if (keyVal == ' ')
 			break;
 		switch (i) {

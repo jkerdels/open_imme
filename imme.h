@@ -35,6 +35,9 @@ void imme_init(void);
 void imme_red_led(uint8_t state);
 void imme_green_led(uint8_t state);
 
+// see tools.h, gfx.h, keys.h for more
+// lib functions
+
 
 #endif
 

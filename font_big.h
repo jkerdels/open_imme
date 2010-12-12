@@ -1,8 +1,10 @@
+#ifndef BIGFONT_H
+#define BIGFONT_H
+
 #include <stdint.h>
 
-__xdata const uint8_t defaultFontWidth = 5;
-
-__code const uint8_t defaultFont[] = {
+__code const uint8_t BigFont[] = {
+    0x5, // font char width
     0x0, 0x0, 0x5E, 0x0, 0x0,  // ! LSB
     0x0, 0x0, 0x5E, 0x0, 0x0,  // ! MSB
 
@@ -284,4 +286,4 @@ __code const uint8_t defaultFont[] = {
 
 };
 
-
+#endif

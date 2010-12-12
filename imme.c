@@ -1,6 +1,9 @@
 #include "imme.h"
 
 
+
+// just setting up the clock and calling the init functions of the sub-parts
+// i.e. keys, gfx, ...
 void imme_init(void)
 {
 	EA = 0;
@@ -21,13 +24,22 @@ void imme_init(void)
 	imme_keys_init();
 
 	imme_gfx_init();
-
 	
 	// enable interrupts globally
 	EA = 1;
-
 }
 
+
+/*
+ * switching the LEDs, the LEDs
+ * are connected "inverted":
+ *        ___  _____
+ * VCC ---|R|--|LED|-- IO_Pin
+ *       
+ * So a '0' at the IO-Pin allows
+ * a current to flow and will enable 
+ * the LED...
+ */ 
 void imme_red_led(uint8_t state)
 {
 	if (state)

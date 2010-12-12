@@ -23,15 +23,41 @@
 #include <cc1110.h>
 #include <stdint.h>
 
+/*
+ * As the DMA config structures from DMA1 upwards have to be in one place
+ * it is defined here.
+ * If you need a DMA structure, increase the NR_OF_DMA_ENTRIES and
+ * add a corresponding Offset define.
+ */
+#define NR_OF_DMA_ENTRIES    1
+#define DISP_DMA_OFFSET      0
+extern __xdata uint8_t dmaCfg1N[NR_OF_DMA_ENTRIES*8];
+
+
+/*
+ * Useful cast makro to cast everything into anything
+ * Do not use this extensivly ;-)
+ */
 #define CAST(new_type,old_object) (*((new_type *)&old_object))
 
-// busy waiting wait, time in milliseconds
+
+/*
+ * simple busy waiting 
+ */
 void ms_wait(uint16_t time); 
 
+
+/*
+ * Puts the imme into standby mode.
+ * A press of the power button wakes the imme up again.
+ */
 void imme_stand_by(void);
 
-// the interrupt service routines have to be included
-// to main -> see sdcc documentation
+
+/*
+ * the interrupt service routines have to be included
+ * to main -> see sdcc documentation
+ */
 void power_button_isr(void) __interrupt (P1INT_VECTOR);
 
 

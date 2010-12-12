@@ -10,9 +10,7 @@ TARGET = $(OBJDIR)/main
 #
 SOURCES  = main.c
 SOURCES += imme.c
-SOURCES += tinyfont.c
 SOURCES += fahrplan_data.c
-SOURCES += imme_font.c
 SOURCES += fahrplan.c
 SOURCES += tools.c
 SOURCES += gfx.c
@@ -41,7 +39,8 @@ TEENSY_FLAGS = -P /dev/ttyACM0
 #
 CC           = sdcc
 PACKIHX      = packihx
-TEENSY_PROG  = tools/teensy-prog/client/main
+#TEENSY_PROG  = tools/teensy-prog/client/main
+TEENSY_PROG  = tools/teensy-prog/client/bin/Debug/immeFlash
 
 
 # Default target

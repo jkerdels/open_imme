@@ -1,8 +1,10 @@
+#ifndef SMALLFONT_H
+#define SMALLFONT_H
+
 #include <stdint.h>
 
-__xdata const uint8_t tinyfontWidth = 3;
-
-__code const uint8_t tinyfont[] = {
+__code const uint8_t SmallFont[] = {
+    0x3, // font char width
     0x0, 0xB8, 0x0,  // ! LSB
     0x0, 0xB8, 0x0,  // ! MSB
 
@@ -284,3 +286,4 @@ __code const uint8_t tinyfont[] = {
 
 };
 
+#endif

@@ -125,20 +125,20 @@ int main(int argc, char *argv[])
     // generate output
     char defBuf[256];
     memset(defBuf,0,256);
-    char *aStr = argv[2];
-    char *bStr = defBuf;
     i = 0;
-    while((aStr) && (i++ < 253)) {
-        *(bStr++) = toupper(*(aStr++));
+    while((argv[2][i] != 0) && (i < 253)) {
+        defBuf[i] = toupper(argv[2][i]);
+        ++i;
     }
-    defBuf[i] = '_';
-    defBuf[i+1] = 'H';
+    defBuf[i++] = '_';
+    defBuf[i] = 'H';
+
 
     printf("#ifndef %s\n#define %s\n\n#include <stdint.h>\n\n",defBuf,defBuf);
 
-    printf("__xdata const uint8_t %sWidth = %i;\n\n",argv[2],charWidth);
-
     printf("__code const uint8_t %s[] = {\n",argv[2]);
+
+    printf("    0x%X, // font char width\n",charWidth);
 
     uint8_t offset = 8 - height;
 
