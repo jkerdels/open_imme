@@ -6,69 +6,52 @@
 #include "font_tiny.h"
 #include "font_big.h"
 
-/*
+/**
  * This is the buffer used to hold the contents of the screen. It is organized
  * in pages (chunks) of 8 lines packet into the bytes, i.e. the first DISP_WIDTH
  * bytes in memory correspond to the first 8 lines of the display. The LSB Bit
  * of the bytes is line 0, the MSB Bit of the bytes is line 7.
  * To enable "fake" grayscale, the buffer holds 2 Bits for every Pixel, where
- * one bit is schon 1 times and the other bit is schon 2 times in fast 
- * alteration. This results in 4 grayscales:
- *   Both bits 0               == white, 
+ * one bit is shown 1 times and the other bit is shown 2 times in fast
+ * alteration. This results in 4 shades of gray:
+ *
+ *   both bits 0               == white,
  *   first bit 1, second bit 0 == light gray, 
  *   first bit 0, second bit 1 == dark gray, 
  *   both bits 1               == black.
  * 
- * In the memory here the pages for first and second bits of the pixels are
+ * In memory, the pages for first and second bits of the pixels are
  * alternating, i.e. the memory starts with DISP_WIDTH bytes representing the
  * first 8 rows of the display containing the "first bits" of the pixels, then
  * DISP_WIDTH bytes follow which represent also the first 8 rows of the display,
  * but contain the "second bits" of the pixels.. and so on with the next page.
  * 
- * The memory is continously transferred to the display via DMA.
+ * The memory is continuously transferred to the display via DMA.
  *
  * If you just use the high_level functions in gfx.h you do not have to worry
  * about this ;-)
  */
-__xdata static uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2L];
+static __xdata uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2L];
 
-/*
+
+/**
  * Memory of DMA cfg structure, see tools.h for details
  */
-__xdata uint8_t *dispDmaCfg = dmaCfg1N + DISP_DMA_OFFSET;
+static __xdata uint8_t * const dispDmaCfg = &dmaCfg1N[DISP_DMA_OFFSET];
 
 
-/*
+/**
  * "currentFont" holds the pointer to the currently selected
  * font. Update the imme_set_font() function below, to add custom fonts
  * The "currentFont" pointer is initialized in the imme_gfx_init().
  */
 static __code uint8_t *currentFont;
 
-void imme_set_font(uint8_t fIdx)
-{
 
-	uint8_t EA_old = EA;
-	EA = 0;
-	switch (fIdx) {
-		case FONT_TINY :
-			currentFont = SmallFont;
-			break;
-		case FONT_BIG : 
-			currentFont = BigFont;
-			break;
-		default : 
-			currentFont = SmallFont;
-		 	break;
-	}
-	EA = EA_old;
-}
-
-
-/*
- * some low level SPI functions used internally here in gfx.c
+/**
+ * Some low level SPI functions used internally here in gfx.c
  */
-void manual_SPI(uint8_t val)
+static void manual_SPI(uint8_t val)
 {
 	U0DBUF = val;
 	while(!(U0CSR & 0x02)); // 1 == Last byte written to Data Buffer register 
@@ -76,7 +59,8 @@ void manual_SPI(uint8_t val)
 	U0CSR &= ~0x02;         // clear status
 }
 
-void set_display_cmd(void)
+
+static void set_display_cmd(void)
 {
 	uint8_t tmp = 0;
 	// set a0 low for sending cmd
@@ -87,7 +71,8 @@ void set_display_cmd(void)
 	++tmp;
 }
 
-void set_display_data(void)
+
+static void set_display_data(void)
 {
 	uint8_t tmp = 0;
 	// set a0 high for sending data
@@ -98,23 +83,27 @@ void set_display_data(void)
 	++tmp;
 }
 
-void set_display_start(uint8_t stVal)
+
+static void set_display_start(uint8_t stVal)
 {
 	manual_SPI(0x40 | (stVal & 0x3F)); // display start
 }
 
-void set_display_page(uint8_t page)
+
+static void set_display_page(uint8_t page)
 {
 	manual_SPI(0xb0 | (page & 0x0F)); // page address
 }
 
-void set_display_col(uint16_t col)
+
+static void set_display_col(uint16_t col)
 {
 	manual_SPI(0x10 | (col >> 8) & 0x0F); // column high 8
 	manual_SPI(0x00 | (col & 0x0F)); // column low 8
 }
 
-void reset_display(void)
+
+static void reset_display(void)
 {
 	// short reset pulse to display
 	P1 &= ~0x02;
@@ -140,13 +129,10 @@ void reset_display(void)
     manual_SPI(0xa4);
 
 	manual_SPI(0xa6); // normal mode
-
 }
 
 
-
-
-/*
+/**
  * After transmission of every Page (8 lines) of display data to the display
  * this interrupt is called to update the DMA structure and reset the display
  * to receive the next line. This method also handles the switching between
@@ -204,8 +190,7 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 }
 
 
-
-/*
+/**
  * This function initialized the gfx stuff and is called from imme_init(), so
  * you do not have to call this explicitly
  */
@@ -266,7 +251,7 @@ void imme_gfx_init(void)
 }
 
 
-/*
+/**
  * Clear the screen buffer with value 'val'.
  * Essentially you will use most of the time
  * val == 0x00 for white or
@@ -282,7 +267,7 @@ void imme_clr_scr(uint8_t val)
 }
 
 
-/*
+/**
  * Set a pixel to 'color' ([0..3]) with "normal" coordinates x,y
  * Like every high-level set_pixel method this thing is horribly
  * slow...
@@ -308,7 +293,7 @@ void imme_set_pixel(uint8_t x, uint8_t y, uint8_t color)
 }
 
 
-/*
+/**
  * Draws a horizontal line at row 'y' with 'color' [0..3]
  * As it uses set_pixel, it is not fast either
  */
@@ -320,14 +305,14 @@ void imme_draw_hLine(uint8_t y, uint8_t color)
 }
 
 
-/*
+/**
  * These two vars hold the current cursor position
  */
-__xdata static uint8_t cursorPage = 0;
-__xdata static uint8_t cursorXPos = 0;
+static __xdata uint8_t cursorPage = 0;
+static __xdata uint8_t cursorXPos = 0;
 
 
-/*
+/**
  * This function sets the cursor for printf.
  * 'x' selects the column to start, 
  * 'page' selects the page to start, i.e. page [0..7]
@@ -342,7 +327,7 @@ void imme_set_cursor(uint8_t x, uint8_t page)
 }
 
 
-/*
+/**
  * If this function is provided, sdcc provides printf,
  * it is recommended to use printf_tiny() ;-)
  */
@@ -390,8 +375,26 @@ void putchar(char c)
 }
 
 
+void imme_set_font(uint8_t fIdx)
+{
+    uint8_t EA_old = EA;
+    EA = 0;
+    switch (fIdx) {
+        case FONT_TINY :
+            currentFont = SmallFont;
+            break;
+        case FONT_BIG :
+            currentFont = BigFont;
+            break;
+        default :
+            currentFont = SmallFont;
+            break;
+    }
+    EA = EA_old;
+}
 
-/*
+
+/**
  * This function clears a region of the screen with value val similar to the
  * imme_clr_scr() function.
  * Clipping to right and bottom is taken care of.
@@ -469,7 +472,7 @@ void imme_clear_region(uint8_t x,
 }
 
 
-/*
+/**
  * This function draws a bitmapped graphic (created with the gfxconvert tool)
  * using the top,left position of (x,y). The parameter 'useMask' is a boolean
  * (0 == false, 1 == true) which disables/enables using of the mask of the gfx.
@@ -596,13 +599,11 @@ void imme_draw_gfx(int16_t x, int16_t y, __code uint8_t *gfx, uint8_t useMask)
 		dstLSB  += dlDist;
 		dstMSB  += dlDist;
 	}
-
 	EA = EA_old;
-
 }
 
 
-/*
+/**
  * Set the display to standby-mode, used by imme_stand_by(), see tools.h
  */
 void imme_display_standby(void)
