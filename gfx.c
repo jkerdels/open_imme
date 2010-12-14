@@ -35,12 +35,6 @@ static __xdata uint8_t dispBuf[DISP_WIDTH*DISP_PAGES*2L];
 
 
 /**
- * Memory of DMA cfg structure, see tools.h for details
- */
-static __xdata uint8_t * const dispDmaCfg = &dmaCfg1N[DISP_DMA_OFFSET];
-
-
-/**
  * "currentFont" holds the pointer to the currently selected
  * font. Update the imme_set_font() function below, to add custom fonts
  * The "currentFont" pointer is initialized in the imme_gfx_init().
@@ -159,7 +153,8 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 		set_display_cmd();
 		// update src address and page
 		curPage = (curPage + 1) % DISP_PAGES;
-		tmpAddr = (dispDmaCfg[0] << 8) | dispDmaCfg[1];
+
+		tmpAddr = BSWAP(DMA_DESC[DMA_LCD].SRCADDR);
 		if (curPage == 0) {
 			switchCnt = (switchCnt + 1) % 3;
 			set_display_start(0);
@@ -169,8 +164,8 @@ void dma_isr(void) __interrupt (DMA_VECTOR)
 		} else {
 			tmpAddr += DISP_WIDTH*2L;
 		}
-		dispDmaCfg[0]  = tmpAddr >> 8;
-		dispDmaCfg[1]  = tmpAddr;
+		DMA_DESC[DMA_LCD].SRCADDR = BSWAP(tmpAddr);
+
 		manual_SPI(0xa4);
 		set_display_page(curPage);
 		set_display_page(curPage);
@@ -216,23 +211,24 @@ void imme_gfx_init(void)
 
 	memset(dispBuf,0x00,DISP_WIDTH*DISP_PAGES*2);
 
-	// prepare DMA transfer for display data
-	dispDmaCfg[0] = (uint16_t)(dispBuf) >> 8;
-	dispDmaCfg[1] = (uint16_t)(dispBuf);
-	dispDmaCfg[2] = 0xDF; //(uint16_t)(&U0DBUF) >> 8;
-	dispDmaCfg[3] = 0xC1; //(uint16_t)(&U0DBUF)
-	dispDmaCfg[4] = (DISP_WIDTH >> 8) & 0x1F;
-	dispDmaCfg[5] = DISP_WIDTH & 0xFF;
-	dispDmaCfg[6] = 0x0F; // trigger with Usart0 TX complete
-	dispDmaCfg[7] = 0x48; // low priority
+	// Prepare DMA transfer for display data
+	DMA_DESC[DMA_LCD].SRCADDR  = BSWAP((uint16_t)dispBuf);
+	DMA_DESC[DMA_LCD].DESTADDR = BSWAP((uint16_t)&X_U0DBUF);
+	DMA_DESC[DMA_LCD].LENGTH   = BSWAP(DISP_WIDTH);
 
-	// enable DMA IRQ
+	// Trigger on USART0 TX complete, low priority
+	DMA_DESC[DMA_LCD].FLAGS    = BSWAP(0x0F48);
+
+	// Enable DMA IRQ
 	IEN1 |= 0x01;
 
-	// set the cfg
-	DMA1CFGH = (uint16_t)(dispDmaCfg) >> 8;
-	DMA1CFGL = (uint16_t)(dispDmaCfg);
-	// clear irq for dma1;
+	// Set the cfg
+    DMA0CFGH = ((uint16_t)&DMA_DESC[0]) >> 8;
+    DMA0CFGL = ((uint16_t)&DMA_DESC[0]) &  0xFF;
+	DMA1CFGH = ((uint16_t)&DMA_DESC[1]) >> 8;
+	DMA1CFGL = ((uint16_t)&DMA_DESC[1]) &  0xFF;
+
+	// Clear irq for dma1;
 	DMAIRQ &= ~0x02;
 
 	set_display_cmd();

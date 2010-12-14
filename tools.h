@@ -1,7 +1,4 @@
-#ifndef TOOLS_H
-#define TOOLS_H
-
-/*
+/**
  * Copyright 2010 Jochen Kerdels
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,49 +16,59 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
+#ifndef TOOLS_H
+#define TOOLS_H
 
 #include <cc1110.h>
 #include <stdint.h>
 
-/*
- * As the DMA config structures from DMA1 upwards have to be in one place
- * it is defined here.
- * If you need a DMA structure, increase the NR_OF_DMA_ENTRIES and
- * add a corresponding Offset define.
+/**
+ * Byte swap macro
+ *
  */
-#define NR_OF_DMA_ENTRIES    1
-#define DISP_DMA_OFFSET      0
-extern __xdata uint8_t dmaCfg1N[NR_OF_DMA_ENTRIES*8];
+#define BSWAP(x)  (((x)<<8) | ((x)>>8))
 
-
-/*
- * Useful cast makro to cast everything into anything
- * Do not use this extensivly ;-)
+/**
+ * DMA channels
+ *
  */
-#define CAST(new_type,old_object) (*((new_type *)&old_object))
+#define DMA_USER       0
+#define DMA_LCD        1
+#define DMA_SOUND      2
+#define DMA_CHANNELS   3
+
+/**
+ * DMA descriptors
+ *
+ * \note These fields are in big-endian order and
+ *       should be accessed using the BSWAP macro.
+ */
+extern __xdata struct dma_desc {
+    volatile uint16_t   SRCADDR;
+    volatile uint16_t   DESTADDR;
+    volatile uint16_t   LENGTH;
+    volatile uint16_t   FLAGS;
+} DMA_DESC[DMA_CHANNELS];
 
 
-/*
- * simple busy waiting 
+/**
+ * Simple busy waiting
  */
 void ms_wait(uint16_t time); 
 
 
-/*
- * Puts the imme into standby mode.
- * A press of the power button wakes the imme up again.
+/**
+ * Put the IM-ME into standby mode.
+ * A press of the power button wakes the IM-ME up again.
  */
 void imme_stand_by(void);
 
 
-/*
- * the interrupt service routines have to be included
- * to main -> see sdcc documentation
+/**
+ * Tthe interrupt service routines have to be included
+ * in main -> see sdcc documentation
  */
 void power_button_isr(void) __interrupt (P1INT_VECTOR);
 
 
 #endif
-
-
-

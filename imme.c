@@ -22,8 +22,8 @@ void imme_init(void)
 	SLEEP |= 0x04;
 	
 	imme_keys_init();
-
 	imme_gfx_init();
+	sound_init();
 	
 	// enable interrupts globally
 	EA = 1;

@@ -1,16 +1,14 @@
 #include "imme.h"
 
+__xdata struct dma_desc DMA_DESC[DMA_CHANNELS];
 
-__xdata uint8_t dmaCfg1N[NR_OF_DMA_ENTRIES*8];
-
-
-/*
- * simple busy waiting 
+/**
+ * Simple busy waiting
  */
 void ms_wait(uint16_t time)
 {
 	while (time--) {
-		uint16_t cnt,k = 0;
+		uint16_t cnt, k = 0;
 		for (cnt = 0; cnt < 1200; ++cnt) {
 			k++;
 		}
@@ -18,8 +16,9 @@ void ms_wait(uint16_t time)
 }
 
 
-/*
- * Puts the imme into standby mode.
+/**
+ * Put the imme into standby mode.
+ *
  * A press of the power button wakes the imme up again.
  * Original src from Michael Ossmanns Spectrum analyser, modified a little bit
  */
@@ -28,7 +27,7 @@ void imme_stand_by(void)
 	volatile uint8_t desc_high = DMA0CFGH;
 	volatile uint8_t desc_low = DMA0CFGL;
 	__xdata uint8_t dma_buf[7] = {0x07,0x07,0x07,0x07,0x07,0x07,0x04};
-	__xdata uint8_t dma_desc[8] = {0x00,0x00,0xDF,0xBE,0x00,0x07,0x20,0x42};
+	__xdata uint8_t DMA_DESC[8] = {0x00,0x00,0xDF,0xBE,0x00,0x07,0x20,0x42};
 	uint8_t EA_old = EA;
 	EA = 0;
 
@@ -62,10 +61,10 @@ void imme_stand_by(void)
 	DMAARM |= (0x80 | 0x01);
 
 	/* DMA prep */
-	dma_desc[0] = (uint16_t)&dma_buf >> 8;
-	dma_desc[1] = (uint16_t)&dma_buf;
-	DMA0CFGH = (uint16_t)&dma_desc >> 8;
-	DMA0CFGL = (uint16_t)&dma_desc;
+	DMA_DESC[0] = (uint16_t)&dma_buf >> 8;
+	DMA_DESC[1] = (uint16_t)&dma_buf;
+	DMA0CFGH = (uint16_t)&DMA_DESC >> 8;
+	DMA0CFGL = (uint16_t)&DMA_DESC;
 	DMAARM = 0x01;
 
 	/*
@@ -122,8 +121,3 @@ void power_button_isr(void) __interrupt (P1INT_VECTOR)
 	// clear sleep
 	SLEEP &= ~SLEEP;
 }
-
-
-
-
-

@@ -15,7 +15,7 @@ SOURCES += fahrplan.c
 SOURCES += tools.c
 SOURCES += gfx.c
 SOURCES += keys.c
-
+SOURCES += sound.c
 
 OBJECTS = $(addprefix $(OBJDIR)/,$(addsuffix .rel,$(basename $(SOURCES))))
 
@@ -39,8 +39,8 @@ TEENSY_FLAGS = -P /dev/ttyACM0
 #
 CC           = sdcc
 PACKIHX      = packihx
-#TEENSY_PROG  = tools/teensy-prog/client/main
-TEENSY_PROG  = tools/teensy-prog/client/bin/Debug/immeFlash
+TEENSY_PROG  = tools/teensy-prog/client/main
+#TEENSY_PROG  = tools/teensy-prog/client/bin/Debug/immeFlash
 
 
 # Default target
