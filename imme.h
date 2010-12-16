@@ -27,6 +27,7 @@
 #include "tools.h"
 #include "gfx.h"
 #include "keys.h"
+#include "sound.h"
 
 // call this once to initialize the imme
 void imme_init(void);
