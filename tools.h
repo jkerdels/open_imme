@@ -35,7 +35,8 @@
 #define DMA_USER       0
 #define DMA_LCD        1
 #define DMA_SOUND      2
-#define DMA_CHANNELS   3
+#define DMA_SOUND_IDX  3
+#define DMA_CHANNELS   4
 
 /**
  * DMA descriptors

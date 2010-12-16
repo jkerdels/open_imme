@@ -39,8 +39,8 @@ TEENSY_FLAGS = -P /dev/ttyACM0
 #
 CC           = sdcc
 PACKIHX      = packihx
-TEENSY_PROG  = tools/teensy-prog/client/main
-#TEENSY_PROG  = tools/teensy-prog/client/bin/Debug/immeFlash
+#TEENSY_PROG  = tools/teensy-prog/client/main
+TEENSY_PROG  = tools/teensy-prog/client/bin/Debug/immeFlash
 
 
 # Default target

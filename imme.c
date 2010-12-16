@@ -23,7 +23,7 @@ void imme_init(void)
 	
 	imme_keys_init();
 	imme_gfx_init();
-	sound_init();
+	imme_sound_init();
 	
 	// enable interrupts globally
 	EA = 1;

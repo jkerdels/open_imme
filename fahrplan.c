@@ -288,7 +288,8 @@ void fp_run(void)
 		imme_key_io();
 		fp_process_keys();
 		fp_render();
-		ms_wait(25);
+		imme_test_sound_trigger();
+		//ms_wait(25);
 	}
 }
 
