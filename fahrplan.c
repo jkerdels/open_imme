@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "rocketGfx.h"
@@ -142,24 +141,39 @@ void fp_render(void)
 		imme_clr_scr(0);
 		imme_set_font(FONT_TINY);
 		imme_set_cursor(0,0);
-		printf_tiny("DAY %u",(fpData[curEntry].dayloc & 0xF) + 1);
+		//printf_tiny("DAY %u",(fpData[curEntry].dayloc & 0xF) + 1);
+		imme_print_str("DAY ");
+		imme_print_uint8((fpData[curEntry].dayloc & 0xF) + 1);
 		imme_set_cursor(106,0);
-		printf_tiny("SAAL %u",((fpData[curEntry].dayloc / 16) & 0xF) + 1);
+		//printf_tiny("SAAL %u",((fpData[curEntry].dayloc / 16) & 0xF) + 1);
+		imme_print_str("SAAL ");
+		imme_print_uint8(((fpData[curEntry].dayloc / 16) & 0xF) + 1);
 		imme_set_font(FONT_BIG);
 		imme_set_cursor(31,0);
 		// printf_tiny doesn't support %02u formatting...
 		if(fpData[curEntry].fromHr < 10)
-			printf_tiny("0");
-		printf_tiny("%u:",fpData[curEntry].fromHr);
+			putchar('0');
+			//printf_tiny("0");
+		//printf_tiny("%u:",fpData[curEntry].fromHr);
+		imme_print_uint8(fpData[curEntry].fromHr);
+		putchar(':');
 		if(fpData[curEntry].fromMin < 10)
-			printf_tiny("0");
-		printf_tiny("%u-",fpData[curEntry].fromMin);
+			putchar('0');
+			//printf_tiny("0");
+		//printf_tiny("%u-",fpData[curEntry].fromMin);
+		imme_print_uint8(fpData[curEntry].fromMin);
+		putchar('-');
 		if(fpData[curEntry].toHr < 10)
-			printf_tiny("0");
-		printf_tiny("%u:",fpData[curEntry].toHr);
+			putchar('0');
+			//printf_tiny("0");
+		//printf_tiny("%u:",fpData[curEntry].toHr);
+		imme_print_uint8(fpData[curEntry].toHr);
+		putchar(':');
 		if(fpData[curEntry].toMin < 10)
-			printf_tiny("0");
-		printf_tiny("%u",fpData[curEntry].toMin);
+			putchar('0');
+			//printf_tiny("0");
+		//printf_tiny("%u",fpData[curEntry].toMin);
+		imme_print_uint8(fpData[curEntry].toMin);
 		imme_set_font(FONT_TINY);
 
 		// i know it is ugly... ah.. just don't ask ;-)
@@ -178,34 +192,40 @@ void fp_render(void)
                                 i+1);
 			 else 
 				imme_set_cursor(0,i+1);
-			printf_tiny("%s",lines[i]);
+			//printf_tiny("%s",lines[i]);
+			imme_print_str(lines[i]);
 		}
 
 		imme_set_cursor(0,7);
-		printf_tiny("%s",eventStr[(fpData[curEntry].flags / 2) & 0x7]);
+		//printf_tiny("%s",eventStr[(fpData[curEntry].flags / 2) & 0x7]);
+		imme_print_str(eventStr[(fpData[curEntry].flags / 2) & 0x7]);
+		
 
 		imme_set_cursor(36,7);	
-		printf_tiny("|");
+		//printf_tiny("|");
+		putchar('|');
 
 		tmpStr = langStr[fpData[curEntry].flags & 1];
 		strSize = (36 - (strlen(tmpStr) * 4)) / 2;
 		imme_set_cursor(44+strSize,7);
-		printf_tiny("%s",tmpStr);
-
+		//printf_tiny("%s",tmpStr);
+		imme_print_str(tmpStr);
+		
 		imme_set_cursor(84,7);	
-		printf_tiny("|");
+		//printf_tiny("|");
+		putchar('|');
 
 		tmpStr = trackStr[(fpData[curEntry].flags / 16) & 0x7];
 		strSize = 39 - (strlen(tmpStr) * 4);
 		imme_set_cursor(92+strSize,7);
-		printf_tiny("%s",tmpStr);
+		//printf_tiny("%s",tmpStr);
+		imme_print_str(tmpStr);
 
 		imme_draw_hLine(8,2);
 		imme_draw_hLine( 8 + (titleLines * 8),1);
 		imme_draw_hLine( 9 + (titleLines * 8),2);
 		imme_draw_hLine(10 + (titleLines * 8),1);
 		imme_draw_hLine(57,2);
-
 
 		lastEntry = curEntry;
 	}		
@@ -222,19 +242,23 @@ void fp_intro(void)
 	for (i = 1; i < t; ++i) {
 		if (i == 10) {
 			imme_set_cursor(5,1);
-			printf_tiny("WE");
+			//printf_tiny("WE");
+			imme_print_str("WE");
 		} else if (i == 20) {
 			imme_set_cursor(5,1);
-			printf_tiny("WE COME");
+			//printf_tiny("WE COME");
+			imme_print_str("WE COME");
 		} else if (i == 30) {
 			imme_set_cursor(19,3);
-			printf_tiny("IN");
+			//printf_tiny("IN");
+			imme_print_str("IN");
 		} else if (i == 40) {
 			imme_set_cursor(11,5);
-			printf_tiny("PEACE");
+			//printf_tiny("PEACE");
+			imme_print_str("PEACE");
 		}
 		imme_draw_gfx(i,DISP_HEIGHT-i,rocket,0);
-		ms_wait(75);
+		ms_wait(25);
 		imme_clear_region(i,DISP_HEIGHT-i,1,rocket[1],0);
 	}
 	i = 0;
@@ -259,7 +283,7 @@ void fp_intro(void)
 		}
 		imme_draw_gfx(x,y,rocket,0);
 		imme_set_cursor(103,7);
-		printf_tiny("27c3");
+		imme_print_str("27c3");
 		ms_wait(150);
 		imme_clear_region(x,y,1,rocket[1],0);
 		imme_clear_region(x+rocket[0],y,1,rocket[1],0);
@@ -270,10 +294,10 @@ void fp_intro(void)
 			imme_set_font(FONT_TINY);
 			if (t == 0) {
 				imme_set_cursor(11,7);
-				printf_tiny("<SPACE>");
+				imme_print_str("<SPACE>");
 			} else {
 				imme_set_cursor(11,7);
-				printf_tiny("<PRESS>");
+				imme_print_str("<PRESS>");
 			}
 			imme_set_font(FONT_BIG);
 		}
@@ -289,7 +313,6 @@ void fp_run(void)
 		fp_process_keys();
 		fp_render();
 		imme_test_sound_trigger();
-		//ms_wait(25);
 	}
 }
 

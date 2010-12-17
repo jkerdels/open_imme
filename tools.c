@@ -2,6 +2,8 @@
 
 __xdata struct dma_desc DMA_DESC[DMA_CHANNELS];
 
+__xdata volatile uint16_t sysTick;
+
 /**
  * Simple busy waiting
  */
@@ -15,6 +17,15 @@ void ms_wait(uint16_t time)
 	}
 }
 
+void imme_tools_init(void)
+{
+	sysTick = 0;
+	// setup timer 3 for a ms interval
+	IRCON &= ~0x08; // clear cpu interrupt flag 
+	T3CTL = 0xFA; // tick/128 + modulo + overflow interrupt
+	T3CC0 = 203;  // gives roughly every ms an interrupt
+	IEN1 |= 0x08; // enable interrupt
+}
 
 /**
  * Put the imme into standby mode.
@@ -121,3 +132,17 @@ void power_button_isr(void) __interrupt (P1INT_VECTOR)
 	// clear sleep
 	SLEEP &= ~SLEEP;
 }
+
+
+/*
+ * General timer isr
+ */
+void timer3_isr(void) __interrupt (T3_VECTOR)
+{
+	IRCON &= ~0x08; // clear cpu interrupt flag
+	TIMIF &= ~0x01; // clear module flag
+	++sysTick;
+}
+
+
+

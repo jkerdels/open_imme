@@ -335,6 +335,7 @@ void putchar(char c)
 	uint8_t fontWidth = currentFont[0];
 	__code uint8_t* font = currentFont+1;
 	EA = 0;
+	
 	dispPos = dispBuf + cursorPage * (DISP_WIDTH*2L) + cursorXPos;
 	if (c == 0x20){ // space
 		cursorXPos += fontWidth + 1;
@@ -367,9 +368,33 @@ void putchar(char c)
 		// increase cursor
 		cursorXPos += fontWidth + 1;
 	}
+	
 	EA = EA_old;
 }
 
+void imme_print_str(uint8_t *str)
+{
+	while(*str) putchar(*(str++));
+}
+
+void imme_print_uint8(uint8_t value)
+{
+	uint8_t h = 0;
+	uint8_t z = 0;
+	while (value >= 100) {
+		++h;
+		value -= 100;
+	}
+	if (h)
+		putchar(h+48);
+	while (value >= 10) {
+		++z;
+		value -= 10;
+	}
+	if ((h) || (z))
+		putchar(z+48);
+	putchar(value+48);
+}
 
 void imme_set_font(uint8_t fIdx)
 {

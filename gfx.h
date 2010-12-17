@@ -102,9 +102,20 @@ void imme_set_cursor(uint8_t x, uint8_t page);
 
 /*
  * If this function is provided, sdcc provides printf,
- * it is recommended to use printf_tiny() ;-)
+ * it is recommended to use printf_tiny() or ...
+ * no, really ... avoid using printf at all ;-)
  */
 void putchar(char c);
+
+/*
+ * Prints a string with current font at current cursor position
+ */
+void imme_print_str(uint8_t *str);
+
+/*
+ * Prints a number with current font at current cursor position
+ */
+void imme_print_uint8(uint8_t value);
 
 
 /*
