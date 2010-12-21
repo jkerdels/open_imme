@@ -168,7 +168,7 @@ void imme_sound_init(void)
 {
     int i;
 
-    // Use timer 4 for ~12.65kHz PWM output on P1.0
+    // Use timer 4 for ~25.3kHz PWM output on P1.0
     //
     P1DIR  |= 0x01;
     T4CTL   = 0x50; // prescale, free-running
@@ -225,6 +225,11 @@ void imme_breathe_trigger(void)
     ++sndCnt;
 }
 
+typedef void (*SndProc)(void);
+
+static SndProc sndProc = 0;
+
+
 void imme_breathe(void)
 {
 	uint8_t EA_old = EA;
@@ -237,8 +242,8 @@ void imme_breathe(void)
     v1_env1_period = 40;
     v1_env_decay = 20;
     v1_env_sust_vol = 100;
-	//sndProc = &imme_breathe_trigger;
-	playSnd = 1;
+	sndProc = imme_breathe_trigger;
+	//playSnd = 1;
     v1_env_state = ENV_ATTACK;
 	sndCnt = 0;
 	EA = EA_old;
@@ -252,8 +257,10 @@ void imme_sound_trigger(void)
 
 	while (dma_buf0_lidx != dma_buf0_idx) {
 		uint8_t val;
-		if (playSnd) {
-			imme_breathe_trigger();
+//		if (playSnd) {
+		if (sndProc) {
+			//imme_breathe_trigger();
+			sndProc();
 			update_voice();
 			update_envelope();
 			val = ((uint16_t)v1_out * (uint16_t)v1_env_volume) >> 8;
@@ -261,6 +268,7 @@ void imme_sound_trigger(void)
 			if (val < 5) val = 5;
 			if (val > 250) val = 250;
 		} else {
+
 			val = 5;
 		}
 		dma_buf0[dma_buf0_lidx] = val;
