@@ -19,6 +19,7 @@ void ms_wait(uint16_t time)
 
 void imme_tools_init(void)
 {
+	rnd_seed(0);
 	sysTick = 0;
 	// setup timer 3 for a ms interval
 	IRCON &= ~0x08; // clear cpu interrupt flag 
@@ -26,6 +27,37 @@ void imme_tools_init(void)
 	T3CC0 = 203;  // gives roughly every ms an interrupt
 	IEN1 |= 0x08; // enable interrupt
 }
+
+
+void rnd_seed(uint8_t seed)
+{
+	RNDL = seed; // set random seed
+	RNDL = seed; // yes, twice !
+}
+
+uint8_t  get_u8_rnd(void)
+{
+	uint8_t EA_old = EA;
+	uint8_t random;
+	EA = 0;
+	random = RNDL;
+	ADCCON1 |= 0x04; // start new random
+	EA = EA_old;
+	return random;
+}
+
+uint16_t get_u16_rnd(void)
+{
+	uint8_t EA_old = EA;
+	uint16_t random;
+	EA = 0;
+	random = (RNDH << 8) | RNDL;
+	ADCCON1 |= 0x04; // start new random
+	EA = EA_old;
+	return random;
+}
+
+
 
 /**
  * Put the imme into standby mode.

@@ -4,7 +4,10 @@
 void imme_sound_init(void);
 
 
-// plays a slightly lowered 'a' note
-void imme_test_sound_trigger(void);
+// plays a breathing sound
+void imme_breathe(void);
+
+// has to be called regularly
+void imme_sound_trigger(void);
 
 #endif

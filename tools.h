@@ -67,6 +67,12 @@ extern __xdata volatile uint16_t sysTick;
  */
 void ms_wait(uint16_t time); 
 
+/*
+ * Get a random values from the hardware pseudo-random generator
+ */
+void rnd_seed(uint8_t seed);
+uint8_t  get_u8_rnd(void);
+uint16_t get_u16_rnd(void);
 
 /**
  * Put the IM-ME into standby mode.

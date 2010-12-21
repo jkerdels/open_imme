@@ -119,6 +119,9 @@ void fp_process_keys(void)
 			curDay = (curDay + 3) & 3;
 			curEntry = dayIdx[curDay];
 		} break;
+		case 'b' : {
+			imme_breathe();
+		} break;
 		case KEY_POWER : {
 			// trigger refresh
 			lastEntry = curEntry + 1;
@@ -312,7 +315,7 @@ void fp_run(void)
 		imme_key_io();
 		fp_process_keys();
 		fp_render();
-		imme_test_sound_trigger();
+		imme_sound_trigger();
 	}
 }
 
