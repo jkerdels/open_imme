@@ -202,6 +202,12 @@ __xdata static uint8_t playSnd = 0;
 
 __idata static uint16_t sndCnt = 0;
 
+typedef void (*SndProc)(void);
+
+static SndProc sndProc = 0;
+
+
+
 void imme_breathe_trigger(void)
 {
     if (sndCnt < 40L * 256)
@@ -219,15 +225,12 @@ void imme_breathe_trigger(void)
     else if (sndCnt == 180L * 256)
         v1_env_state = ENV_RELEASE;
     else if (v1_env_state == 0) {
-		playSnd = 0;
+		sndProc = 0;
 		return;
 	}
     ++sndCnt;
 }
 
-typedef void (*SndProc)(void);
-
-static SndProc sndProc = 0;
 
 
 void imme_breathe(void)
@@ -243,11 +246,49 @@ void imme_breathe(void)
     v1_env_decay = 20;
     v1_env_sust_vol = 100;
 	sndProc = imme_breathe_trigger;
-	//playSnd = 1;
     v1_env_state = ENV_ATTACK;
 	sndCnt = 0;
 	EA = EA_old;
 }
+
+__bit static blip_toggle = 0;
+
+void imme_blip_trigger(void)
+{
+    if (sndCnt < 30L * 256) {
+        if ((sndCnt & 511) == 0) {
+            v1_freq += blip_toggle ? -750L : 925L;
+            blip_toggle = blip_toggle ? 0 : 1;
+        }
+    } else if (sndCnt == 40L * 256)
+        v1_env_state = ENV_RELEASE;
+    else if (sndCnt == 60L * 256) {
+        sndProc = 0;
+	}
+    ++sndCnt;
+}
+
+void imme_blip(void)
+{
+	uint8_t EA_old = EA;
+	EA = 0;
+    v1_noise   = 0;
+    v1_square  = 0;
+    v1_tri     = 1;
+    v1_saw     = 0;
+    v1_freq  = 5000;
+    v1_env1_period = 30;
+    v1_env_decay = 10;
+    v1_env_sust_vol = 100;
+	blip_toggle = 0;
+	sndProc = imme_blip_trigger;
+    v1_env_state = ENV_ATTACK;
+	sndCnt = 0;
+	EA = EA_old;
+}
+
+
+
 
 
 void imme_sound_trigger(void)

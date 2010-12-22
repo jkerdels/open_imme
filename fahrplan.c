@@ -122,6 +122,9 @@ void fp_process_keys(void)
 		case 'b' : {
 			imme_breathe();
 		} break;
+		case 'n' : {
+			imme_blip();
+		} break;
 		case KEY_POWER : {
 			// trigger refresh
 			lastEntry = curEntry + 1;

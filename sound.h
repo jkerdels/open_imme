@@ -7,6 +7,8 @@ void imme_sound_init(void);
 // plays a breathing sound
 void imme_breathe(void);
 
+void imme_blip(void);
+
 // has to be called regularly
 void imme_sound_trigger(void);
 
